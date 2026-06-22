@@ -1,4 +1,6 @@
-import { defineConfig } from "vite";
+const port = parseInt(process.env.PORT) || 5173;
+const basePath = process.env.BASE_PATH || '/';const port = parseInt(process.env.PORT) || 5173;
+const basePath = process.env.BASE_PATH || '/';import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
