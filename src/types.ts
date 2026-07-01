@@ -97,3 +97,17 @@ export interface CVData {
   languages: { id: string; name: string; level: string }[];
   experience: CVExperience[];
 }
+
+export interface ReminderItem {
+  id: number;
+  title: string;
+  description?: string | null;
+  date: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  durationHours: number;
+  isCompleted: boolean;
+  reminderMinutesBefore: number;
+  isNotified: boolean;
+  createdAt: string;
+}

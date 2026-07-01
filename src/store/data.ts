@@ -267,3 +267,13 @@ export async function getDocuments() {
 export async function saveDocuments(docs: any) {
   await saveToAPI("documents", docs);
 }
+
+export const REMINDERS_SEED: any[] = [];
+
+export async function getReminders() {
+  return await fetchFromAPI("reminders", REMINDERS_SEED);
+}
+
+export async function saveReminders(reminders: any) {
+  await saveToAPI("reminders", reminders);
+}

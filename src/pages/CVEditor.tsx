@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getCV, saveCV } from "@/store/data";
 import type { CVData, CVEducation, CVCertificate, CVExperience } from "@/types";
-import { cn } from "@/lib/utils";
 
 function uid() {
   return `id_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
