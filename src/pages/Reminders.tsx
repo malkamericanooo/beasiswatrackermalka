@@ -41,6 +41,7 @@ export default function Reminders() {
   const [weekStart, setWeekStart] = useState(today);
   const [selectedDay, setSelectedDay] = useState(today);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: "", description: "", date: format(today, "yyyy-MM-dd"),
     startTime: "", durationHours: 1,
@@ -132,35 +133,67 @@ export default function Reminders() {
     });
   }, [todayReminders, updateRem]);
 
-  const openDialog = (date?: string, time?: string) => {
-    setFormData({
-      title: "", description: "",
-      date: date || format(selectedDay, "yyyy-MM-dd"),
-      startTime: time || "",
-      durationHours: 1,
-    });
+  const openDialog = (date?: string, time?: string, existing?: ReminderItem) => {
+    if (existing) {
+      setFormData({
+        title: existing.title,
+        description: existing.description || "",
+        date: existing.date,
+        startTime: existing.startTime || "",
+        durationHours: existing.durationHours || 1,
+      });
+      setEditingId(existing.id);
+    } else {
+      setFormData({
+        title: "", description: "",
+        date: date || format(selectedDay, "yyyy-MM-dd"),
+        startTime: time || "",
+        durationHours: 1,
+      });
+      setEditingId(null);
+    }
     setSearchQuery("");
     setShowSuggestions(false);
     setDialogOpen(true);
   };
 
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    createRem.mutate({
-      title: formData.title.trim(),
-      description: formData.description || undefined,
-      date: formData.date,
-      startTime: formData.startTime || null,
-      endTime: null,
-      durationHours: formData.durationHours,
-      reminderMinutesBefore: 15,
-    }, {
-      onSuccess: () => {
-        setDialogOpen(false);
-        toast.success("Task added");
-      }
-    });
+    
+    if (editingId) {
+      updateRem.mutate({
+        id: editingId,
+        data: {
+          title: formData.title.trim(),
+          description: formData.description || undefined,
+          date: formData.date,
+          startTime: formData.startTime || null,
+          durationHours: formData.durationHours,
+        }
+      }, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          toast.success("Task updated");
+        }
+      });
+    } else {
+      createRem.mutate({
+        title: formData.title.trim(),
+        description: formData.description || undefined,
+        date: formData.date,
+        startTime: formData.startTime || null,
+        endTime: null,
+        durationHours: formData.durationHours,
+        reminderMinutesBefore: 15,
+      }, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          toast.success("Task added");
+        }
+      });
+    }
   };
 
 
@@ -308,7 +341,7 @@ export default function Reminders() {
                             )}
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ring-2 shrink-0 z-10 ${
                               rem.isCompleted
-                                ? "bg-muted ring-muted text-muted-foreground"
+                                ? "bg-slate-800 ring-slate-700 text-blue-300"
                                 : "bg-primary/10 ring-primary/20 text-primary"
                             }`}>
                               <TaskIcon className="w-4 h-4" />
@@ -316,31 +349,33 @@ export default function Reminders() {
                           </div>
 
                           {/* Card */}
-                          <div className={`flex-1 mb-1 rounded-xl border px-4 py-3 transition-all ${
+                          <div 
+                            onClick={() => openDialog(undefined, undefined, rem)}
+                            className={`flex-1 mb-1 rounded-xl border px-4 py-3 transition-all cursor-pointer ${
                             rem.isCompleted
-                              ? "bg-muted/30 border-muted opacity-60"
-                              : "bg-card border-border shadow-sm"
+                              ? "bg-slate-900 text-white border-slate-800 opacity-95 shadow-md"
+                              : "bg-card border-border shadow-sm hover:border-primary/40 hover:shadow-md"
                           }`}>
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-[10px] font-mono text-muted-foreground">
+                                  <span className={`text-[10px] font-mono ${rem.isCompleted ? "text-slate-400" : "text-muted-foreground"}`}>
                                     {rem.startTime?.slice(0, 5)}
                                     {rem.durationHours ? ` · ${rem.durationHours}h` : ""}
                                   </span>
                                 </div>
-                                <p className={`font-semibold text-sm leading-tight ${rem.isCompleted ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                <p className={`font-semibold text-sm leading-tight ${rem.isCompleted ? "line-through text-slate-200" : "text-foreground"}`}>
                                   {rem.title}
                                 </p>
                                 {rem.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{rem.description}</p>
+                                  <p className={`text-xs mt-0.5 leading-snug ${rem.isCompleted ? "text-slate-400" : "text-muted-foreground"}`}>{rem.description}</p>
                                 )}
                               </div>
 
-                              <div className="flex items-center gap-1 shrink-0">
+                              <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                                 <button
                                   onClick={() => handleDelete(rem.id)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-muted-foreground hover:text-destructive"
+                                  className={`p-1 rounded transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -348,7 +383,7 @@ export default function Reminders() {
                                   onClick={() => handleComplete(rem.id)}
                                   className={`p-0.5 rounded-full transition-colors ${
                                     rem.isCompleted
-                                      ? "text-emerald-500"
+                                      ? "text-emerald-400"
                                       : "text-muted-foreground/40 hover:text-primary"
                                   }`}
                                 >
@@ -415,29 +450,32 @@ export default function Reminders() {
                     {unscheduled.map(rem => {
                       const TaskIcon = pickIcon(rem.title);
                       return (
-                        <div key={rem.id} className={`group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
-                          rem.isCompleted ? "bg-muted/30 border-muted opacity-50" : "bg-card border-border shadow-sm"
+                        <div 
+                          key={rem.id} 
+                          onClick={() => openDialog(undefined, undefined, rem)}
+                          className={`group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${
+                          rem.isCompleted ? "bg-slate-900 text-white border-slate-800 opacity-95 shadow-md" : "bg-card border-border shadow-sm hover:border-primary/40 hover:shadow-md"
                         }`}>
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                            rem.isCompleted ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                            rem.isCompleted ? "bg-slate-800 text-blue-300" : "bg-primary/10 text-primary"
                           }`}>
                             <TaskIcon className="w-3.5 h-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium leading-tight ${rem.isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                            <p className={`text-sm font-medium leading-tight ${rem.isCompleted ? "line-through text-slate-200" : ""}`}>
                               {rem.title}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                             <button
                               onClick={() => handleDelete(rem.id)}
-                              className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+                              className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleComplete(rem.id)}
-                              className={`p-0.5 transition-colors ${rem.isCompleted ? "text-emerald-500" : "text-muted-foreground/40 hover:text-primary"}`}
+                              className={`p-0.5 transition-colors ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
                             >
                               {rem.isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                             </button>
@@ -480,32 +518,35 @@ export default function Reminders() {
             allWeekUnscheduled.map(rem => {
               const TaskIcon = pickIcon(rem.title);
               return (
-                <div key={rem.id} className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-lg border bg-background transition-all ${
-                  rem.isCompleted ? "opacity-40 border-muted" : "border-border/60 hover:border-border"
+                <div 
+                  key={rem.id} 
+                  onClick={() => openDialog(undefined, undefined, rem)}
+                  className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all cursor-pointer ${
+                  rem.isCompleted ? "bg-slate-900 text-white border-slate-800 opacity-95 shadow-md" : "bg-background border-border/60 hover:border-primary/40 hover:shadow-sm"
                 }`}>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                    rem.isCompleted ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                    rem.isCompleted ? "bg-slate-800 text-blue-300" : "bg-primary/10 text-primary"
                   }`}>
                     <TaskIcon className="w-3 h-3" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-medium leading-tight truncate ${rem.isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                    <p className={`text-xs font-medium leading-tight truncate ${rem.isCompleted ? "line-through text-slate-200" : ""}`}>
                       {rem.title}
                     </p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    <p className={`text-[10px] mt-0.5 ${rem.isCompleted ? "text-slate-400" : "text-muted-foreground/60"}`}>
                       {format(parseISO(rem.date), "EEE, MMM d")}
                     </p>
                   </div>
-                  <div className="flex gap-0.5 shrink-0">
+                  <div className="flex gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => handleDelete(rem.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+                      className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => handleComplete(rem.id)}
-                      className={`p-0.5 ${rem.isCompleted ? "text-emerald-500" : "text-muted-foreground/40 hover:text-primary"}`}
+                      className={`p-0.5 ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
                     >
                       {rem.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                     </button>
@@ -540,7 +581,7 @@ export default function Reminders() {
         <DialogContent className="sm:max-w-md">
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl">New Task</DialogTitle>
+              <DialogTitle className="font-serif text-xl">{editingId ? "Edit Task" : "New Task"}</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
@@ -631,8 +672,8 @@ export default function Reminders() {
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={createRem.isPending}>
-                {createRem.isPending ? "Saving..." : "Add Task"}
+              <Button type="submit" disabled={createRem.isPending || updateRem.isPending}>
+                {createRem.isPending || updateRem.isPending ? "Saving..." : editingId ? "Save Changes" : "Add Task"}
               </Button>
             </DialogFooter>
           </form>
