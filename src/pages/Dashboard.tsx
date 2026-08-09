@@ -160,7 +160,7 @@ export default function Dashboard() {
           </div>
 
           {items3Days.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-2">Tidak ada deadline atau tugas sekolah mendesak dalam 3 hari kedepan 🎉</p>
+            <p className="text-xs text-muted-foreground py-2">Tidak ada deadline atau tugas sekolah mendesak dalam 3 hari kedepan.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {items3Days.map((item, idx) => (

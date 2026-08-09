@@ -178,16 +178,16 @@ export const UNIVERSITIES_SEED = [
 ];
 
 export const GOALS_SEED = [
-  { id: "g_ppkn_swot", title: "Tugas Miss Lydia PPKN SWOT", category: "Tugas Sekolah", priority: "High", deadline: "2026-08-11", description: "Tugas Analisis SWOT Pelajaran PPKN Miss Lydia", completed: false },
-  { id: "g_bindo_web", title: "Tugas Web Bu Susanti B.Indo", category: "Tugas Sekolah", priority: "High", deadline: "2026-08-11", description: "Pengumpulan Website Tugas Bahasa Indonesia Bu Susanti", completed: false },
-  { id: "g_sat_english_project", title: "SAT English Project Continuous", category: "Project", priority: "High", deadline: "2026-08-16", description: "Project SAT English berjalan sampai 16 Agustus selesai/tamat", completed: false },
-  { id: "g_nipro_its", title: "NIPRO ITS (Periode 2 Minggu)", category: "Lomba", priority: "High", deadline: "2026-08-31", description: "Kompetisi NIPRO ITS mulai 17 Agustus s/d 31 Agustus 2026", completed: false },
-  { id: "g_gebyar_ulm", title: "Lomba Gebyar ULM", category: "Lomba", priority: "High", deadline: "2026-09-12", description: "Pendaftaran & Pengumpulan Lomba Gebyar ULM 2026", completed: false },
-  { id: "g_math_challenge", title: "Lomba Mathematics Challenge", category: "Lomba", priority: "High", deadline: "2026-09-26", description: "Babak Penyisihan & Puncak Mathematics Challenge 2026", completed: false },
-  { id: "g1", title: "Achieve IELTS Score 7.5", category: "Language", priority: "High", deadline: "2026-08-25", description: "Focus on writing and speaking sections. Practice every weekend.", completed: false },
-  { id: "g2", title: "Draft Motivation Letter for CMU", category: "Application", priority: "High", deadline: "2026-08-20", description: "", completed: false },
-  { id: "g3", title: "Save $500 for application fees", category: "Financial", priority: "Medium", deadline: null, description: "", completed: false },
-  { id: "g4", title: "Translate Academic Transcripts to English", category: "Application", priority: "Low", deadline: "2026-08-15", description: "", completed: true },
+  { id: "g_ppkn_swot", title: "Tugas Miss Lydia PPKN SWOT", category: "Tugas Sekolah", priority: "High", startDate: "2026-08-11", deadline: "2026-08-11", time: "08:00", description: "Tugas Analisis SWOT Pelajaran PPKN Miss Lydia", completed: false },
+  { id: "g_bindo_web", title: "Tugas Web Bu Susanti B.Indo", category: "Tugas Sekolah", priority: "High", startDate: "2026-08-11", deadline: "2026-08-11", time: "10:00", description: "Pengumpulan Website Tugas Bahasa Indonesia Bu Susanti", completed: false },
+  { id: "g_sat_english_project", title: "SAT English Project Continuous", category: "Project", priority: "High", startDate: "2026-08-08", deadline: "2026-08-16", time: "09:00", description: "Project SAT English berjalan setiap hari sampai 16 Agustus", completed: false },
+  { id: "g_nipro_its", title: "NIPRO ITS (Periode 2 Minggu)", category: "Lomba", priority: "High", startDate: "2026-08-17", deadline: "2026-08-31", time: "09:00", description: "Kompetisi NIPRO ITS berlangsung dari 17 Agustus s/d 31 Agustus 2026", completed: false },
+  { id: "g_gebyar_ulm", title: "Lomba Gebyar ULM", category: "Lomba", priority: "High", startDate: "2026-09-12", deadline: "2026-09-12", time: "08:00", description: "Pendaftaran & Pengumpulan Lomba Gebyar ULM 2026", completed: false },
+  { id: "g_math_challenge", title: "Lomba Mathematics Challenge", category: "Lomba", priority: "High", startDate: "2026-09-26", deadline: "2026-09-26", time: "08:00", description: "Babak Penyisihan & Puncak Mathematics Challenge 2026", completed: false },
+  { id: "g1", title: "Achieve IELTS Score 7.5", category: "Language", priority: "High", startDate: "2026-08-01", deadline: "2026-08-25", time: null, description: "Focus on writing and speaking sections. Practice every weekend.", completed: false },
+  { id: "g2", title: "Draft Motivation Letter for CMU", category: "Application", priority: "High", startDate: "2026-08-10", deadline: "2026-08-20", time: null, description: "", completed: false },
+  { id: "g3", title: "Save $500 for application fees", category: "Financial", priority: "Medium", startDate: null, deadline: null, time: null, description: "", completed: false },
+  { id: "g4", title: "Translate Academic Transcripts to English", category: "Application", priority: "Low", startDate: "2026-08-01", deadline: "2026-08-15", time: null, description: "", completed: true },
 ];
 
 const getHeaders = () => {

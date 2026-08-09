@@ -51,7 +51,9 @@ export interface Goal {
   title: string;
   category: string;
   priority: Priority;
+  startDate?: string | null;
   deadline: string | null;
+  time?: string | null;
   description: string;
   completed: boolean;
 }

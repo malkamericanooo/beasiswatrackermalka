@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock,
   Filter, Plus, CheckCircle2, Circle, Eye, LayoutGrid, ListFilter,
-  Sparkles, ExternalLink, Trash2, CalendarDays, Trophy, BookOpen, Rocket, Award, GraduationCap
+  ExternalLink, Trash2, CalendarDays, Trophy, BookOpen, Rocket, Award, GraduationCap, FileText
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -70,7 +71,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
       chip: "bg-emerald-600 text-white shadow-xs hover:bg-emerald-700",
       badge: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200",
       border: "border-l-4 border-l-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100",
-      label: "🏆 Lomba / Competition",
+      label: "Lomba / Competition",
       tag: "Lomba",
     };
   }
@@ -81,7 +82,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
       chip: "bg-indigo-600 text-white shadow-xs hover:bg-indigo-700",
       badge: "bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-200",
       border: "border-l-4 border-l-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-950 dark:text-indigo-100",
-      label: "📌 Tugas Sekolah",
+      label: "Tugas Sekolah",
       tag: "Tugas Sekolah",
     };
   }
@@ -92,7 +93,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
       chip: "bg-amber-600 text-white shadow-xs hover:bg-amber-700",
       badge: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-200",
       border: "border-l-4 border-l-amber-600 bg-amber-50/70 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100",
-      label: "🚀 Projek Akademik",
+      label: "Projek Akademik",
       tag: "Projek",
     };
   }
@@ -103,7 +104,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
       chip: "bg-sky-600 text-white shadow-xs hover:bg-sky-700",
       badge: "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950 dark:text-sky-200",
       border: "border-l-4 border-l-sky-600 bg-sky-50/70 dark:bg-sky-950/40 text-sky-950 dark:text-sky-100",
-      label: "📂 App Opens",
+      label: "App Opens",
       tag: "App Opens",
     };
   }
@@ -114,7 +115,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
       chip: "bg-rose-600 text-white shadow-xs hover:bg-rose-700",
       badge: "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-200",
       border: "border-l-4 border-l-rose-600 bg-rose-50/70 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100",
-      label: "🎓 Scholarship Apply",
+      label: "Scholarship Apply",
       tag: "Scholarship",
     };
   }
@@ -124,7 +125,7 @@ export function getCategoryStyle(ev: UnifiedCalEvent) {
     chip: "bg-purple-600 text-white shadow-xs hover:bg-purple-700",
     badge: "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-200",
     border: "border-l-4 border-l-purple-600 bg-purple-50/70 dark:bg-purple-950/40 text-purple-950 dark:text-purple-100",
-    label: "⏰ Agenda Harian",
+    label: "Agenda Harian",
     tag: "Agenda",
   };
 }
@@ -143,11 +144,15 @@ export default function CalendarPage() {
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [activeEvent, setActiveEvent] = useState<UnifiedCalEvent | null>(null);
 
-  // Dialog state for adding a quick Goal
+  // Dialog state for adding/editing a Goal/Event
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addGoalTitle, setAddGoalTitle] = useState("");
   const [addGoalCategory, setAddGoalCategory] = useState("Tugas Sekolah");
   const [addGoalPriority, setAddGoalPriority] = useState<"High" | "Medium" | "Low">("Medium");
+  const [addGoalStartDate, setAddGoalStartDate] = useState("");
+  const [addGoalDeadline, setAddGoalDeadline] = useState("");
+  const [addGoalTime, setAddGoalTime] = useState("09:00");
+  const [addGoalDescription, setAddGoalDescription] = useState("");
 
   // Load all events (Universities, Goals, Reminders)
   const loadEvents = () => {
@@ -183,20 +188,47 @@ export default function CalendarPage() {
         }
       });
 
-      // Goals
-      (goals as Goal[]).filter((g) => g.deadline).forEach((g) => {
-        unified.push({
-          id: `goal_${g.id}`,
-          date: g.deadline!.slice(0, 10),
-          title: g.title,
-          type: "goal",
-          category: g.category || "Goal",
-          subLabel: g.category,
-          description: g.description || "Goal preparation milestone.",
-          completed: g.completed,
-          priority: g.priority,
-          rawObject: g,
-        });
+      // Goals (supports multi-day continuous spans from startDate to deadline)
+      (goals as Goal[]).filter((g) => g.deadline || g.startDate).forEach((g) => {
+        const endStr = g.deadline ? g.deadline.slice(0, 10) : g.startDate!.slice(0, 10);
+        const startStr = g.startDate ? g.startDate.slice(0, 10) : endStr;
+
+        if (startStr && endStr && startStr < endStr) {
+          // Multi-day continuous range! Render daily event on every day from startStr to endStr
+          const cur = new Date(startStr + "T00:00:00");
+          const endDate = new Date(endStr + "T00:00:00");
+          while (cur <= endDate) {
+            const dateKey = cur.toISOString().slice(0, 10);
+            unified.push({
+              id: `goal_${g.id}_${dateKey}`,
+              date: dateKey,
+              title: g.title,
+              type: "goal",
+              category: g.category || "Goal",
+              subLabel: g.category,
+              time: g.time || undefined,
+              description: g.description || "Goal preparation milestone.",
+              completed: g.completed,
+              priority: g.priority,
+              rawObject: g,
+            });
+            cur.setDate(cur.getDate() + 1);
+          }
+        } else {
+          unified.push({
+            id: `goal_${g.id}`,
+            date: endStr,
+            title: g.title,
+            type: "goal",
+            category: g.category || "Goal",
+            subLabel: g.category,
+            time: g.time || undefined,
+            description: g.description || "Goal preparation milestone.",
+            completed: g.completed,
+            priority: g.priority,
+            rawObject: g,
+          });
+        }
       });
 
       // Structured Reminders
@@ -266,17 +298,31 @@ export default function CalendarPage() {
     setSelectedDayKey(todayKey);
   };
 
+  const openAddDialog = (dayKey?: string) => {
+    const targetDate = dayKey || selectedDayKey || todayKey;
+    setAddGoalTitle("");
+    setAddGoalCategory("Tugas Sekolah");
+    setAddGoalPriority("Medium");
+    setAddGoalStartDate(targetDate);
+    setAddGoalDeadline(targetDate);
+    setAddGoalTime("09:00");
+    setAddGoalDescription("");
+    setAddDialogOpen(true);
+  };
+
   // Adding quick goal
   const handleAddGoal = async () => {
-    if (!addGoalTitle.trim() || !selectedDayKey) return;
+    if (!addGoalTitle.trim()) return;
     const existingGoals = (await getGoals()) as Goal[];
     const newGoal: Goal = {
       id: `g_${Date.now()}`,
       title: addGoalTitle.trim(),
       category: addGoalCategory,
       priority: addGoalPriority,
-      deadline: selectedDayKey,
-      description: "Added directly from Google Calendar view",
+      startDate: addGoalStartDate || addGoalDeadline || todayKey,
+      deadline: addGoalDeadline || addGoalStartDate || todayKey,
+      time: addGoalTime.trim() || null,
+      description: addGoalDescription.trim(),
       completed: false,
     };
     await saveGoals([...existingGoals, newGoal]);
@@ -312,15 +358,15 @@ export default function CalendarPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
-      {/* Google Calendar Toolbar Header */}
+      {/* Header Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-sm">
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Google Calendar View</h1>
-            <p className="text-muted-foreground text-sm">Overview agenda, lomba, tugas sekolah, projek & scholarship.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Calendar Overview</h1>
+            <p className="text-muted-foreground text-sm">Visual schedule for deadlines, tasks, projects, competitions, and daily agendas.</p>
           </div>
         </div>
 
@@ -352,11 +398,11 @@ export default function CalendarPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Kategori</SelectItem>
-              <SelectItem value="lomba">🏆 Lomba & Kompetisi</SelectItem>
-              <SelectItem value="tugas">📌 Tugas Sekolah</SelectItem>
-              <SelectItem value="projek">🚀 Projek Akademik</SelectItem>
-              <SelectItem value="scholarship">🎓 Scholarship Apply</SelectItem>
-              <SelectItem value="agenda">⏰ Agenda Harian</SelectItem>
+              <SelectItem value="lomba">Lomba & Kompetisi</SelectItem>
+              <SelectItem value="tugas">Tugas Sekolah</SelectItem>
+              <SelectItem value="projek">Projek Akademik</SelectItem>
+              <SelectItem value="scholarship">Scholarship Apply</SelectItem>
+              <SelectItem value="agenda">Agenda Harian</SelectItem>
             </SelectContent>
           </Select>
 
@@ -388,45 +434,45 @@ export default function CalendarPage() {
 
       {/* Color Classification Legend Bar */}
       <div className="flex flex-wrap items-center gap-4 text-xs bg-muted/30 p-3 rounded-lg border border-border">
-        <span className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Klasifikasi Warna:</span>
+        <span className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Category Classification:</span>
         
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-emerald-600 shadow-xs" />
           <span className="text-foreground font-bold flex items-center gap-1">
-            <Trophy className="w-3 h-3 text-emerald-600" /> Lomba / Competition
+            <Trophy className="w-3.5 h-3.5 text-emerald-600" /> Lomba / Competition
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-indigo-600 shadow-xs" />
           <span className="text-foreground font-bold flex items-center gap-1">
-            <BookOpen className="w-3 h-3 text-indigo-600" /> Tugas Sekolah
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Tugas Sekolah
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-amber-600 shadow-xs" />
           <span className="text-foreground font-bold flex items-center gap-1">
-            <Rocket className="w-3 h-3 text-amber-600" /> Projek Akademik
+            <Rocket className="w-3.5 h-3.5 text-amber-600" /> Projek Akademik
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-rose-600 shadow-xs" />
           <span className="text-foreground font-bold flex items-center gap-1">
-            <GraduationCap className="w-3 h-3 text-rose-600" /> Scholarship Apply
+            <GraduationCap className="w-3.5 h-3.5 text-rose-600" /> Scholarship Apply
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-purple-600 shadow-xs" />
           <span className="text-foreground font-bold flex items-center gap-1">
-            <Clock className="w-3 h-3 text-purple-600" /> Agenda Harian
+            <Clock className="w-3.5 h-3.5 text-purple-600" /> Agenda Harian
           </span>
         </div>
       </div>
 
-      {/* View Mode: Month Grid (Google Calendar full style) */}
+      {/* View Mode: Month Grid */}
       {viewMode === "month" && (
         <Card className="border border-border shadow-sm overflow-hidden bg-card">
           <CardContent className="p-0">
@@ -483,16 +529,16 @@ export default function CalendarPage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedDayKey(key);
-                              setAddDialogOpen(true);
+                              openAddDialog(key);
                             }}
                             className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary p-0.5 rounded transition-all"
-                            title="Quick add goal"
+                            title="Add event for this date"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
-                        {/* Google Calendar Classified Event Chips */}
+                        {/* Classified Event Chips */}
                         <div className="space-y-1 overflow-hidden flex-1">
                           {dayEvents.slice(0, 3).map((ev) => {
                             const style = getCategoryStyle(ev);
@@ -591,13 +637,13 @@ export default function CalendarPage() {
         </Card>
       )}
 
-      {/* Selected Day Event Drawer / Summary */}
+      {/* Selected Day Event Summary Drawer */}
       {selectedDayKey && (
         <Card className="border border-primary/30 bg-primary/5 shadow-sm">
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className="font-semibold text-base text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
+                <CalendarDays className="w-4 h-4 text-primary" />
                 {new Date(selectedDayKey + "T00:00:00").toLocaleDateString("id-ID", {
                   weekday: "long",
                   day: "numeric",
@@ -611,8 +657,8 @@ export default function CalendarPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={() => setAddDialogOpen(true)} className="text-xs">
-                <Plus className="w-3.5 h-3.5 mr-1" /> Add Goal for Date
+              <Button size="sm" onClick={() => openAddDialog(selectedDayKey)} className="text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Task / Event
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setSelectedDayKey(null)} className="text-xs">
                 Close
@@ -622,7 +668,7 @@ export default function CalendarPage() {
         </Card>
       )}
 
-      {/* Google Calendar Event Detail Modal Popover */}
+      {/* Event Detail Modal Popover */}
       <Dialog open={!!activeEvent} onOpenChange={(v) => !v && setActiveEvent(null)}>
         {activeEvent && (
           <DialogContent className="sm:max-w-md">
@@ -656,7 +702,7 @@ export default function CalendarPage() {
               {activeEvent.description && (
                 <div>
                   <Label className="text-xs text-muted-foreground">Description / Notes</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed bg-muted/40 p-2.5 rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed bg-muted/40 p-2.5 rounded-lg border border-border whitespace-pre-wrap">
                     {activeEvent.description}
                   </p>
                 </div>
@@ -729,19 +775,19 @@ export default function CalendarPage() {
         )}
       </Dialog>
 
-      {/* Quick Add Goal Dialog for Selected Date */}
+      {/* Comprehensive Add Event / Task / Goal Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add Goal for {selectedDayKey}</DialogTitle>
+            <DialogTitle>Add Event / Task / Goal</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-3">
             <div>
-              <Label htmlFor="quick-goal-title">Goal Title</Label>
+              <Label htmlFor="quick-goal-title">Title</Label>
               <Input
                 id="quick-goal-title"
-                placeholder="e.g. Submit Application Form"
+                placeholder="e.g. Tugas Miss Lydia PPKN SWOT / Lomba Gebyar ULM"
                 value={addGoalTitle}
                 onChange={(e) => setAddGoalTitle(e.target.value)}
                 className="mt-1"
@@ -761,7 +807,8 @@ export default function CalendarPage() {
                     <SelectItem value="Lomba">Lomba / Competition</SelectItem>
                     <SelectItem value="Project">Projek Akademik</SelectItem>
                     <SelectItem value="Application">Scholarship Apply</SelectItem>
-                    <SelectItem value="Language">Language</SelectItem>
+                    <SelectItem value="Language">Language / Test Prep</SelectItem>
+                    <SelectItem value="Financial">Financial</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -780,12 +827,58 @@ export default function CalendarPage() {
                 </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="start-date">Start Date</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={addGoalStartDate}
+                  onChange={(e) => setAddGoalStartDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="end-date">Deadline Date</Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={addGoalDeadline}
+                  onChange={(e) => setAddGoalDeadline(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="time-input">Time (Optional)</Label>
+                <Input
+                  id="time-input"
+                  type="time"
+                  value={addGoalTime}
+                  onChange={(e) => setAddGoalTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="desc-notes">Notes / Description</Label>
+              <Textarea
+                id="desc-notes"
+                placeholder="Additional notes, instructions, or sub-tasks..."
+                value={addGoalDescription}
+                onChange={(e) => setAddGoalDescription(e.target.value)}
+                className="mt-1 min-h-[80px]"
+              />
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleAddGoal} disabled={!addGoalTitle.trim()}>
-              Save Goal
+              Save Event / Task
             </Button>
           </DialogFooter>
         </DialogContent>
