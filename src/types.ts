@@ -109,5 +109,6 @@ export interface ReminderItem {
   isCompleted: boolean;
   reminderMinutesBefore: number;
   isNotified: boolean;
+  iconId?: string;
   createdAt: string;
 }

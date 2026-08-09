@@ -225,21 +225,21 @@ export default function Goals() {
   const categories = [...new Set(goals.map(g => g.category))];
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Goals & Targets</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Goals & Targets</h1>
           <p className="text-muted-foreground text-sm">Keep track of your preparation milestones.</p>
         </div>
-        <Button onClick={() => setAddOpen(true)} data-testid="btn-add-goal">
+        <Button onClick={() => setAddOpen(true)} data-testid="btn-add-goal" className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1.5" />
           Add Goal
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1 max-w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             data-testid="input-search-goals"
@@ -250,7 +250,7 @@ export default function Goals() {
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40" data-testid="select-goal-category-filter">
+          <SelectTrigger className="w-full sm:w-40" data-testid="select-goal-category-filter">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
@@ -259,7 +259,7 @@ export default function Goals() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36" data-testid="select-goal-status-filter">
+          <SelectTrigger className="w-full sm:w-36" data-testid="select-goal-status-filter">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -275,9 +275,9 @@ export default function Goals() {
         <div className="mb-6">
           <h2 className="text-base font-semibold text-foreground mb-3">
             Most Urgent
-            <span className="text-xs font-normal text-muted-foreground ml-2">Ranked by deadline proximity + priority</span>
+            <span className="text-xs font-normal text-muted-foreground block sm:inline sm:ml-2">Ranked by deadline proximity + priority</span>
           </h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mostUrgent.map(g => (
               <GoalCard
                 key={g.id}
@@ -297,9 +297,9 @@ export default function Goals() {
         <div className="mb-6">
           <h2 className="text-base font-semibold text-foreground mb-3">
             High Priority
-            <span className="text-xs font-normal text-muted-foreground ml-2">Ranked by priority then deadline</span>
+            <span className="text-xs font-normal text-muted-foreground block sm:inline sm:ml-2">Ranked by priority then deadline</span>
           </h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {highPriority.map(g => (
               <GoalCard
                 key={g.id}
@@ -318,7 +318,7 @@ export default function Goals() {
       {completed.length > 0 && statusFilter !== "active" && (
         <div className="mb-6">
           <h2 className="text-base font-semibold text-foreground mb-3">Completed</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {completed.map(g => (
               <GoalCard
                 key={g.id}

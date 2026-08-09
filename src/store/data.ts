@@ -178,12 +178,16 @@ export const UNIVERSITIES_SEED = [
 ];
 
 export const GOALS_SEED = [
-  { id: "g1", title: "Achieve IELTS Score 7.5", category: "Language", priority: "High", deadline: "2026-07-22", description: "Focus on writing and speaking sections. Practice every weekend.", completed: false },
-  { id: "g2", title: "Draft Motivation Letter for CMU", category: "Application", priority: "High", deadline: "2026-07-07", description: "", completed: false },
+  { id: "g_ppkn_swot", title: "Tugas Miss Lydia PPKN SWOT", category: "Tugas Sekolah", priority: "High", deadline: "2026-08-11", description: "Tugas Analisis SWOT Pelajaran PPKN Miss Lydia", completed: false },
+  { id: "g_bindo_web", title: "Tugas Web Bu Susanti B.Indo", category: "Tugas Sekolah", priority: "High", deadline: "2026-08-11", description: "Pengumpulan Website Tugas Bahasa Indonesia Bu Susanti", completed: false },
+  { id: "g_sat_english_project", title: "SAT English Project Continuous", category: "Project", priority: "High", deadline: "2026-08-16", description: "Project SAT English berjalan sampai 16 Agustus selesai/tamat", completed: false },
+  { id: "g_nipro_its", title: "NIPRO ITS (Periode 2 Minggu)", category: "Lomba", priority: "High", deadline: "2026-08-31", description: "Kompetisi NIPRO ITS mulai 17 Agustus s/d 31 Agustus 2026", completed: false },
+  { id: "g_gebyar_ulm", title: "Lomba Gebyar ULM", category: "Lomba", priority: "High", deadline: "2026-09-12", description: "Pendaftaran & Pengumpulan Lomba Gebyar ULM 2026", completed: false },
+  { id: "g_math_challenge", title: "Lomba Mathematics Challenge", category: "Lomba", priority: "High", deadline: "2026-09-26", description: "Babak Penyisihan & Puncak Mathematics Challenge 2026", completed: false },
+  { id: "g1", title: "Achieve IELTS Score 7.5", category: "Language", priority: "High", deadline: "2026-08-25", description: "Focus on writing and speaking sections. Practice every weekend.", completed: false },
+  { id: "g2", title: "Draft Motivation Letter for CMU", category: "Application", priority: "High", deadline: "2026-08-20", description: "", completed: false },
   { id: "g3", title: "Save $500 for application fees", category: "Financial", priority: "Medium", deadline: null, description: "", completed: false },
-  { id: "g4", title: "Translate Academic Transcripts to English", category: "Application", priority: "Low", deadline: "2026-06-17", description: "", completed: true },
-  { id: "g5", title: "Prepare SAT Study Plan", category: "Academic", priority: "High", deadline: "2026-07-01", description: "Aim for 1400+", completed: false },
-  { id: "g6", title: "Request Recommendation Letters", category: "Application", priority: "High", deadline: "2026-08-01", description: "Ask 2 teachers and 1 counselor", completed: false }
+  { id: "g4", title: "Translate Academic Transcripts to English", category: "Application", priority: "Low", deadline: "2026-08-15", description: "", completed: true },
 ];
 
 const getHeaders = () => {
@@ -195,36 +199,83 @@ const getHeaders = () => {
 };
 
 async function fetchFromAPI(key: string, seedData: any) {
+  const localKey = `beasiswa_${key}`;
+  let localData = null;
+  const localRaw = localStorage.getItem(localKey);
+  if (localRaw) {
+    try {
+      localData = JSON.parse(localRaw);
+    } catch {
+      localData = null;
+    }
+  }
+
   try {
-    const res = await fetch(`/api/data?key=${key}`, { headers: getHeaders() });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(`/api/data?key=${key}`, {
+      headers: getHeaders(),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
     if (res.status === 401) {
       window.dispatchEvent(new Event('auth-error'));
-      return seedData;
+      return localData ?? seedData;
     }
-    if (res.ok) {
+
+    const contentType = res.headers.get("content-type");
+    if (res.ok && contentType && contentType.includes("application/json")) {
       const data = await res.json();
-      if (data.value) return data.value;
+      if (data && data.value !== undefined && data.value !== null) {
+        // Supabase has real data -> update localStorage and return
+        localStorage.setItem(localKey, JSON.stringify(data.value));
+        return data.value;
+      } else if (localData !== null) {
+        // Supabase row is empty, but local storage HAS user data -> auto upload to Supabase!
+        saveToAPI(key, localData);
+        return localData;
+      }
     }
-    await saveToAPI(key, seedData);
-    return seedData;
   } catch (e) {
-    console.error('Failed to fetch data from API:', e);
-    return seedData;
+    console.warn(`[data store] fetchFromAPI fallback for key "${key}":`, e);
   }
+
+  const finalData = localData !== null ? localData : seedData;
+  if (localData === null && seedData !== null) {
+    try {
+      localStorage.setItem(localKey, JSON.stringify(seedData));
+    } catch (e) {
+      console.warn("Failed to set seed data in localStorage:", e);
+    }
+  }
+  return finalData;
 }
 
 async function saveToAPI(key: string, value: any) {
+  const localKey = `beasiswa_${key}`;
   try {
+    localStorage.setItem(localKey, JSON.stringify(value));
+  } catch (e) {
+    console.error("Failed to write to localStorage:", e);
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     const res = await fetch(`/api/data?key=${key}`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ value })
+      body: JSON.stringify({ value }),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
     if (res.status === 401) {
       window.dispatchEvent(new Event('auth-error'));
     }
   } catch (e) {
-    console.error('Failed to save data to API:', e);
+    console.warn(`[data store] saveToAPI fallback for key "${key}":`, e);
   }
 }
 
@@ -268,7 +319,158 @@ export async function saveDocuments(docs: any) {
   await saveToAPI("documents", docs);
 }
 
-export const REMINDERS_SEED: any[] = [];
+const now = new Date();
+const formatDate = (offsetDays: number) => {
+  const d = new Date(now);
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+};
+
+export const REMINDERS_SEED: any[] = [
+  {
+    id: 101,
+    title: "Mau belajar SAT",
+    description: "Latihan Reading & Writing section (Barron 2026)",
+    date: formatDate(0),
+    startTime: "08:00",
+    durationHours: 2,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "sat",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 102,
+    title: "Draft Essay SOP CMU",
+    description: "Tulis short answer question #1",
+    date: formatDate(0),
+    startTime: "14:00",
+    durationHours: 1.5,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "essay",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 103,
+    title: "IELTS Practice Test",
+    description: "Listening section 4 & Speaking test",
+    date: formatDate(1),
+    startTime: "09:00",
+    durationHours: 2,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "sat",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 104,
+    title: "Review CV Editor",
+    description: "Update pengalaman organisasi & sertifikat",
+    date: formatDate(1),
+    startTime: "16:00",
+    durationHours: 1,
+    reminderMinutesBefore: 10,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "general",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 105,
+    title: "Research Berkeley EECS",
+    description: "Cek syarat IELTS & deadline pendaftaran",
+    date: formatDate(2),
+    startTime: "10:00",
+    durationHours: 1.5,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "uni",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 106,
+    title: "Submit Recommendation Request",
+    description: "Kirim email rekomendasi ke guru PAI & BTA",
+    date: formatDate(3),
+    startTime: "13:00",
+    durationHours: 1,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "mail",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 107,
+    title: "Math SAT Drills",
+    description: "Kombinatorik & Fungsi Floor Ceiling",
+    date: formatDate(4),
+    startTime: "09:30",
+    durationHours: 2.5,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "sat",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 108,
+    title: "Rest & Exercise Break",
+    description: "Olahraga & Istirahat sore",
+    date: formatDate(5),
+    startTime: "16:00",
+    durationHours: 1,
+    reminderMinutesBefore: 10,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "fitness",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 109,
+    title: "Weekly Progress Review",
+    description: "Evaluasi target beasiswa 7 hari terakhir",
+    date: formatDate(6),
+    startTime: "19:00",
+    durationHours: 1,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "general",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 110,
+    title: "SAT Subscription Active",
+    description: "Masa aktif paket & latihan SAT s/d 22 Agustus 2026",
+    date: "2026-08-22",
+    startTime: "09:00",
+    durationHours: 2,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "sat",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 111,
+    title: "NIPRO ITS Pembukaan (2 Minggu)",
+    description: "Kickoff & Pembukaan NIPRO ITS (17 Agustus - 31 Agustus 2026)",
+    date: "2026-08-17",
+    startTime: "10:00",
+    durationHours: 2,
+    reminderMinutesBefore: 15,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "uni",
+    createdAt: now.toISOString(),
+  }
+];
 
 export async function getReminders() {
   return await fetchFromAPI("reminders", REMINDERS_SEED);
@@ -276,4 +478,39 @@ export async function getReminders() {
 
 export async function saveReminders(reminders: any) {
   await saveToAPI("reminders", reminders);
+}
+
+export async function syncAllToCloud() {
+  const keys = ["universities", "goals", "cv", "documents", "reminders"];
+  const seeds: Record<string, any> = {
+    universities: UNIVERSITIES_SEED,
+    goals: GOALS_SEED,
+    cv: { personalInfo: { name: "", email: "", phone: "", address: "" }, education: [], certificates: [], skills: [], languages: [], experience: [] },
+    documents: [],
+    reminders: REMINDERS_SEED,
+  };
+
+  let synced = 0;
+  for (const k of keys) {
+    const localRaw = localStorage.getItem(`beasiswa_${k}`);
+    const val = localRaw ? JSON.parse(localRaw) : seeds[k];
+    await saveToAPI(k, val);
+    synced++;
+  }
+  return synced;
+}
+
+export async function restoreDefaultSeeds() {
+  const seeds: Record<string, any> = {
+    universities: UNIVERSITIES_SEED,
+    goals: GOALS_SEED,
+    cv: { personalInfo: { name: "", email: "", phone: "", address: "" }, education: [], certificates: [], skills: [], languages: [], experience: [] },
+    documents: [],
+    reminders: REMINDERS_SEED,
+  };
+
+  for (const k of Object.keys(seeds)) {
+    localStorage.setItem(`beasiswa_${k}`, JSON.stringify(seeds[k]));
+    await saveToAPI(k, seeds[k]);
+  }
 }

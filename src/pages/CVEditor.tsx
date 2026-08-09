@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Printer } from "lucide-react";
+import { Plus, Trash2, Printer, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,6 +129,12 @@ export default function CVEditor() {
     experience: [],
   });
   const [skillInput, setSkillInput] = useState("");
+  const [draggedCertIdx, setDraggedCertIdx] = useState<number | null>(null);
+  const [dragOverCertIdx, setDragOverCertIdx] = useState<number | null>(null);
+  const [draggedEduIdx, setDraggedEduIdx] = useState<number | null>(null);
+  const [dragOverEduIdx, setDragOverEduIdx] = useState<number | null>(null);
+  const [draggedExpIdx, setDraggedExpIdx] = useState<number | null>(null);
+  const [dragOverExpIdx, setDragOverExpIdx] = useState<number | null>(null);
 
   useEffect(() => {
     getCV().then(data => setCv(data as CVData));
@@ -154,6 +160,18 @@ export default function CVEditor() {
   const removeEducation = (id: string) => {
     persist({ ...cv, education: cv.education.filter(e => e.id !== id) });
   };
+  const reorderEducation = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const arr = [...cv.education];
+    const [moved] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, moved);
+    persist({ ...cv, education: arr });
+  };
+  const moveEducation = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= cv.education.length) return;
+    reorderEducation(idx, newIdx);
+  };
 
   // Certificates
   const addCertificate = () => {
@@ -165,6 +183,18 @@ export default function CVEditor() {
   };
   const removeCertificate = (id: string) => {
     persist({ ...cv, certificates: cv.certificates.filter(c => c.id !== id) });
+  };
+  const reorderCertificates = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const arr = [...cv.certificates];
+    const [moved] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, moved);
+    persist({ ...cv, certificates: arr });
+  };
+  const moveCertificate = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= cv.certificates.length) return;
+    reorderCertificates(idx, newIdx);
   };
 
   // Skills
@@ -199,6 +229,18 @@ export default function CVEditor() {
   };
   const removeExperience = (id: string) => {
     persist({ ...cv, experience: cv.experience.filter(e => e.id !== id) });
+  };
+  const reorderExperience = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const arr = [...cv.experience];
+    const [moved] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, moved);
+    persist({ ...cv, experience: arr });
+  };
+  const moveExperience = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= cv.experience.length) return;
+    reorderExperience(idx, newIdx);
   };
 
   const handlePrint = () => window.print();
@@ -252,12 +294,36 @@ export default function CVEditor() {
                 <p className="text-xs text-muted-foreground">No education entries yet.</p>
               )}
               {cv.education.map((e, i) => (
-                <div key={e.id} className="border border-border rounded-md p-3 mb-3 last:mb-0">
+                <div
+                  key={e.id}
+                  draggable
+                  onDragStart={() => setDraggedEduIdx(i)}
+                  onDragOver={(ev) => { ev.preventDefault(); setDragOverEduIdx(i); }}
+                  onDragLeave={() => setDragOverEduIdx(null)}
+                  onDrop={() => { if (draggedEduIdx !== null) reorderEducation(draggedEduIdx, i); setDraggedEduIdx(null); setDragOverEduIdx(null); }}
+                  onDragEnd={() => { setDraggedEduIdx(null); setDragOverEduIdx(null); }}
+                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                    draggedEduIdx === i ? "opacity-50 border-primary" :
+                    dragOverEduIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                    "border-border"
+                  }`}
+                >
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium text-muted-foreground">Entry {i + 1}</span>
-                    <button onClick={() => removeEducation(e.id)} data-testid={`btn-remove-edu-${e.id}`} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
+                      <span className="text-xs font-medium text-muted-foreground">Entry {i + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => moveEducation(i, -1)} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move up">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => moveEducation(i, 1)} disabled={i === cv.education.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move down">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => removeEducation(e.id)} data-testid={`btn-remove-edu-${e.id}`} className="text-muted-foreground hover:text-destructive p-0.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
@@ -295,12 +361,36 @@ export default function CVEditor() {
                 <p className="text-xs text-muted-foreground">No certificates yet. Add one above!</p>
               )}
               {cv.certificates.map((c, i) => (
-                <div key={c.id} className="border border-border rounded-md p-3 mb-3 last:mb-0">
+                <div
+                  key={c.id}
+                  draggable
+                  onDragStart={() => setDraggedCertIdx(i)}
+                  onDragOver={(ev) => { ev.preventDefault(); setDragOverCertIdx(i); }}
+                  onDragLeave={() => setDragOverCertIdx(null)}
+                  onDrop={() => { if (draggedCertIdx !== null) reorderCertificates(draggedCertIdx, i); setDraggedCertIdx(null); setDragOverCertIdx(null); }}
+                  onDragEnd={() => { setDraggedCertIdx(null); setDragOverCertIdx(null); }}
+                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                    draggedCertIdx === i ? "opacity-50 border-primary" :
+                    dragOverCertIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                    "border-border"
+                  }`}
+                >
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium text-muted-foreground">Certificate {i + 1}</span>
-                    <button onClick={() => removeCertificate(c.id)} data-testid={`btn-remove-cert-${c.id}`} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
+                      <span className="text-xs font-medium text-muted-foreground">Certificate {i + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => moveCertificate(i, -1)} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move up">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => moveCertificate(i, 1)} disabled={i === cv.certificates.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move down">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => removeCertificate(c.id)} data-testid={`btn-remove-cert-${c.id}`} className="text-muted-foreground hover:text-destructive p-0.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
@@ -380,12 +470,36 @@ export default function CVEditor() {
                 <p className="text-xs text-muted-foreground">No experience entries yet.</p>
               )}
               {cv.experience.map((e, i) => (
-                <div key={e.id} className="border border-border rounded-md p-3 mb-3 last:mb-0">
+                <div
+                  key={e.id}
+                  draggable
+                  onDragStart={() => setDraggedExpIdx(i)}
+                  onDragOver={(ev) => { ev.preventDefault(); setDragOverExpIdx(i); }}
+                  onDragLeave={() => setDragOverExpIdx(null)}
+                  onDrop={() => { if (draggedExpIdx !== null) reorderExperience(draggedExpIdx, i); setDraggedExpIdx(null); setDragOverExpIdx(null); }}
+                  onDragEnd={() => { setDraggedExpIdx(null); setDragOverExpIdx(null); }}
+                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                    draggedExpIdx === i ? "opacity-50 border-primary" :
+                    dragOverExpIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                    "border-border"
+                  }`}
+                >
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium text-muted-foreground">Entry {i + 1}</span>
-                    <button onClick={() => removeExperience(e.id)} data-testid={`btn-remove-exp-${e.id}`} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
+                      <span className="text-xs font-medium text-muted-foreground">Entry {i + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => moveExperience(i, -1)} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move up">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => moveExperience(i, 1)} disabled={i === cv.experience.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20 p-0.5" title="Move down">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => removeExperience(e.id)} data-testid={`btn-remove-exp-${e.id}`} className="text-muted-foreground hover:text-destructive p-0.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>

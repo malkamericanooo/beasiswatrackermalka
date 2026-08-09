@@ -419,21 +419,27 @@ export default function Documents() {
     Sertifikat: [],
     Lainnya: [],
   };
-  filtered.forEach((d) => grouped[d.category].push(d));
+  filtered.forEach((d) => {
+    if (grouped[d.category]) {
+      grouped[d.category].push(d);
+    } else {
+      grouped["Lainnya"].push(d);
+    }
+  });
 
   const storageUsed = getStorageUsed(docs);
   const storageMax = MAX_STORAGE_MB * 1024 * 1024;
   const storagePct = Math.min(100, (storageUsed / storageMax) * 100);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Berkas Penting</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Berkas Penting</h1>
           <p className="text-muted-foreground text-sm">Simpan transkip, sertifikat, dan dokumen penting lainnya.</p>
         </div>
-        <Button onClick={() => setUploadOpen(true)} data-testid="btn-upload-berkas">
+        <Button onClick={() => setUploadOpen(true)} data-testid="btn-upload-berkas" className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1.5" />
           Unggah Berkas
         </Button>
