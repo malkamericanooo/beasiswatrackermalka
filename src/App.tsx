@@ -21,11 +21,15 @@ import {
   RefreshCw,
   Bell,
   BellRing,
-  Smartphone
+  Smartphone,
+  Laptop,
+  Wifi,
+  WifiOff
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +41,8 @@ import CVEditor from "@/pages/CVEditor";
 import Documents from "@/pages/Documents";
 import Reminders from "@/pages/Reminders";
 import NotFound from "@/pages/not-found";
-import { syncAllToCloud, restoreDefaultSeeds } from "@/store/data";
+import { syncAllToCloud, restoreDefaultSeeds, getGoals } from "@/store/data";
+import type { Goal } from "@/types";
 
 const queryClient = new QueryClient();
 
@@ -53,9 +58,68 @@ const navItems = [
   { path: "/reminders", label: "Reminders", icon: AlarmClock },
 ];
 
-function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
+function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void; onOpenMacInstall: () => void }) {
   const importRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [notifGranted, setNotifGranted] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOnline(navigator.onLine);
+      const handleOn = () => {
+        setIsOnline(true);
+        toast({ title: "Connected Online", description: "Network restored. Auto-syncing offline data to Supabase." });
+      };
+      const handleOff = () => {
+        setIsOnline(false);
+        toast({ title: "Offline Mode", description: "Changes will be saved locally and synced when back online." });
+      };
+      window.addEventListener("online", handleOn);
+      window.addEventListener("offline", handleOff);
+
+      if ("Notification" in window) {
+        setNotifGranted(Notification.permission === "granted");
+      }
+
+      return () => {
+        window.removeEventListener("online", handleOn);
+        window.removeEventListener("offline", handleOff);
+      };
+    }
+  }, [toast]);
+
+  async function handleEnableNotif() {
+    if (!("Notification" in window)) {
+      toast({ title: "Not Supported", description: "This browser does not support system notifications.", variant: "destructive" });
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      setNotifGranted(true);
+      new Notification("Beasiswa Tracker", {
+        body: "System notifications are active. Daily tasks & deadlines will alert you natively.",
+        icon: "/favicon.svg"
+      });
+      toast({ title: "Notifications Active", description: "Native daily reminders enabled." });
+    } else {
+      toast({ title: "Permission Denied", description: "Allow notifications in browser settings.", variant: "destructive" });
+    }
+  }
+
+  async function handleCloudSync() {
+    toast({ title: "Syncing to Cloud...", description: "Uploading local data to Supabase database." });
+    await syncAllToCloud();
+    toast({ title: "Cloud Sync Complete", description: "All local data saved to Supabase cloud." });
+  }
+
+  async function handleResetSample() {
+    if (confirm("Restore initial sample data? Your local data will be reset to default seeds.")) {
+      await restoreDefaultSeeds();
+      toast({ title: "Sample Data Restored", description: "Reloading page..." });
+      setTimeout(() => window.location.reload(), 1000);
+    }
+  }
 
   function handleExport() {
     const backup: Record<string, unknown> = {
@@ -82,7 +146,7 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast({ title: "Backup berhasil diunduh", description: `beasiswa-backup-${date}.json` });
+    toast({ title: "Backup Exported", description: `beasiswa-backup-${date}.json` });
   }
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -103,66 +167,42 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
           }
         }
         if (restored === 0) {
-          toast({ title: "File tidak valid", description: "Tidak ada data yang bisa dipulihkan.", variant: "destructive" });
+          toast({ title: "Invalid File", description: "No valid backup data found.", variant: "destructive" });
           return;
         }
-        toast({ title: "Data berhasil dipulihkan", description: `${restored} kategori dimuat. Halaman akan di-refresh.` });
+        toast({ title: "Data Restored", description: `${restored} categories loaded. Reloading...` });
         setTimeout(() => window.location.reload(), 1200);
       } catch {
-        toast({ title: "Gagal membaca file", description: "Pastikan file adalah backup JSON yang valid.", variant: "destructive" });
+        toast({ title: "Failed to read file", description: "Ensure valid JSON backup file.", variant: "destructive" });
       }
     };
     reader.readAsText(file);
   }
 
-  const [notifGranted, setNotifGranted] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setNotifGranted(Notification.permission === "granted");
-    }
-  }, []);
-
-  async function handleEnableNotif() {
-    if (!("Notification" in window)) {
-      toast({ title: "Fitur tidak didukung", description: "Browser ini tidak mendukung Notifikasi Sistem.", variant: "destructive" });
-      return;
-    }
-    const perm = await Notification.requestPermission();
-    if (perm === "granted") {
-      setNotifGranted(true);
-      new Notification("Beasiswa Tracker Notifications", {
-        body: "Notifikasi browser & sistem berhasil diaktifkan!",
-        icon: "/favicon.svg"
-      });
-      toast({ title: "Notifikasi Aktif", description: "Notifikasi deadline & agenda harian berhasil diaktifkan." });
-    } else {
-      toast({ title: "Izin Ditolak", description: "Izinkan notifikasi di pengaturan browser kamu.", variant: "destructive" });
-    }
-  }
-
-  function handlePwaAppInfo() {
-    alert("Cara Install Aplikasi di HP:\n\n1. Di iPhone (Safari): Klik tombol Share -> 'Add to Home Screen'\n2. Di Android (Chrome): Klik titik tiga -> 'Install App' / 'Add to Home Screen'\n\nAplikasi akan berjalan standalone seperti Mobile App native!");
-  }
-
-  async function handleCloudSync() {
-    toast({ title: "Syncing ke Cloud...", description: "Mengunggah data lokal ke Supabase database." });
-    await syncAllToCloud();
-    toast({ title: "Sync Selesai", description: "Semua data lokal berhasil disimpan ke cloud." });
-  }
-
-  async function handleResetSample() {
-    if (confirm("Apakah kamu yakin ingin memulihkan contoh data awal? Data di browser akan di-reset ke sample bawaan.")) {
-      await restoreDefaultSeeds();
-      toast({ title: "Sample Data Dimuat", description: "Data bawaan berhasil dipulihkan. Mengisi ulang halaman..." });
-      setTimeout(() => window.location.reload(), 1000);
-    }
-  }
-
   return (
     <div className="px-2 pb-4 border-t border-sidebar-border pt-3 space-y-0.5">
-      <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider px-2 mb-2">App & Notifications</p>
+      <div className="flex items-center justify-between px-2 mb-2">
+        <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-bold">App Status</span>
+        <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5 font-mono font-semibold",
+          isOnline ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+        )}>
+          {isOnline ? (
+            <span className="flex items-center gap-1"><Wifi className="w-2.5 h-2.5" /> Online (Supabase)</span>
+          ) : (
+            <span className="flex items-center gap-1"><WifiOff className="w-2.5 h-2.5" /> Offline (Local)</span>
+          )}
+        </Badge>
+      </div>
       
+      <button
+        onClick={onOpenMacInstall}
+        data-testid="btn-mac-install"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
+      >
+        <Laptop className="w-4 h-4 shrink-0 text-sky-400" />
+        Install Mac Desktop App
+      </button>
+
       <button
         onClick={handleEnableNotif}
         data-testid="btn-enable-notif"
@@ -173,16 +213,7 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
         ) : (
           <Bell className="w-4 h-4 shrink-0 text-indigo-400" />
         )}
-        {notifGranted ? "Notifikasi Aktif" : "Aktifkan Notifikasi"}
-      </button>
-
-      <button
-        onClick={handlePwaAppInfo}
-        data-testid="btn-pwa-info"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <Smartphone className="w-4 h-4 shrink-0 text-purple-400" />
-        Install App di HP
+        {notifGranted ? "Notifications Active" : "Enable Notifications"}
       </button>
 
       <button
@@ -199,8 +230,8 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
         data-testid="btn-cloud-sync"
         className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
       >
-        <CloudUpload className="w-4 h-4 shrink-0 text-sky-400" />
-        Sync ke Supabase
+        <CloudUpload className="w-4 h-4 shrink-0 text-purple-400" />
+        Sync to Supabase
       </button>
 
       <button
@@ -267,7 +298,7 @@ function NavLinks() {
   );
 }
 
-function Sidebar({ onOpenAuth }: { onOpenAuth: () => void }) {
+function Sidebar({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void; onOpenMacInstall: () => void }) {
   return (
     <aside className="hidden md:flex flex-col w-52 bg-sidebar text-sidebar-foreground shrink-0 border-r border-sidebar-border min-h-screen sticky top-0">
       <div className="px-4 py-5 flex items-center gap-2 border-b border-sidebar-border">
@@ -275,7 +306,7 @@ function Sidebar({ onOpenAuth }: { onOpenAuth: () => void }) {
         <span className="font-semibold text-sm">Beasiswa Tracker</span>
       </div>
       <NavLinks />
-      <DataActions onOpenAuth={onOpenAuth} />
+      <DataActions onOpenAuth={onOpenAuth} onOpenMacInstall={onOpenMacInstall} />
     </aside>
   );
 }
@@ -297,12 +328,41 @@ function Router() {
 
 function App() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [macInstallOpen, setMacInstallOpen] = useState(false);
   const [password, setPassword] = useState("");
 
   useEffect(() => {
     const handler = () => setAuthOpen(true);
     window.addEventListener('auth-error', handler);
     return () => window.removeEventListener('auth-error', handler);
+  }, []);
+
+  // Daily Continuous Task Notification Checker
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const notifKey = `daily_notif_sent_${todayStr}`;
+
+      if (!localStorage.getItem(notifKey)) {
+        getGoals().then((goals) => {
+          const activeContinuous = (goals as Goal[]).filter((g) => {
+            if (g.completed) return false;
+            const start = g.startDate ? g.startDate.slice(0, 10) : g.deadline?.slice(0, 10);
+            const end = g.deadline ? g.deadline.slice(0, 10) : start;
+            return start && end && start <= todayStr && todayStr <= end;
+          });
+
+          if (activeContinuous.length > 0) {
+            const first = activeContinuous[0];
+            new Notification("Daily Task Reminder", {
+              body: `${first.title} is active today! (${activeContinuous.length} continuous tasks in progress)`,
+              icon: "/favicon.svg",
+            });
+            localStorage.setItem(notifKey, "true");
+          }
+        });
+      }
+    }
   }, []);
 
   const handleLogin = () => {
@@ -312,6 +372,7 @@ function App() {
   };
 
   const openAuth = () => setAuthOpen(true);
+  const openMacInstall = () => setMacInstallOpen(true);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -337,13 +398,13 @@ function App() {
                       <span className="font-semibold text-sm">Beasiswa Tracker</span>
                     </div>
                     <NavLinks />
-                    <DataActions onOpenAuth={openAuth} />
+                    <DataActions onOpenAuth={openAuth} onOpenMacInstall={openMacInstall} />
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
 
-            <Sidebar onOpenAuth={openAuth} />
+            <Sidebar onOpenAuth={openAuth} onOpenMacInstall={openMacInstall} />
             <main className="flex-1 overflow-y-auto min-h-0 md:min-h-screen">
               <Router />
             </main>
@@ -351,6 +412,7 @@ function App() {
         </WouterRouter>
         <Toaster />
 
+        {/* Database Auth Dialog */}
         <Dialog open={authOpen} onOpenChange={setAuthOpen}>
           <DialogContent>
             <DialogHeader>
@@ -361,6 +423,53 @@ function App() {
               <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
               <Button onClick={handleLogin} className="w-full">Login</Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mac Desktop App Installation Modal */}
+        <Dialog open={macInstallOpen} onOpenChange={setMacInstallOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Laptop className="w-5 h-5 text-sky-500" />
+                Install Desktop App on macOS
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2 text-sm">
+              <p className="text-xs text-muted-foreground">
+                You can install <strong>Beasiswa Tracker</strong> as a native Mac app directly on your Dock and Launchpad!
+              </p>
+
+              <div className="space-y-3 bg-muted/40 p-3 rounded-lg border border-border text-xs">
+                <div className="space-y-1">
+                  <span className="font-bold text-foreground block">Option 1: Safari (macOS Sonoma / Sequoia)</span>
+                  <p className="text-muted-foreground">
+                    1. Click <strong>File</strong> in the top macOS menu bar.<br />
+                    2. Click <strong>Add to Dock...</strong><br />
+                    3. Launch directly from your macOS Dock or Launchpad!
+                  </p>
+                </div>
+
+                <div className="space-y-1 border-t pt-2">
+                  <span className="font-bold text-foreground block">Option 2: Google Chrome / Brave</span>
+                  <p className="text-muted-foreground">
+                    1. Look at the right side of the address bar for the <strong>Install Icon (⤓)</strong>.<br />
+                    2. Or click the <strong>⋮ Menu</strong> -&gt; <strong>Save and Share</strong> -&gt; <strong>Install Beasiswa Tracker</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2.5 rounded border border-emerald-500/20">
+                ✓ Full offline support (works without internet)<br />
+                ✓ Auto-syncs to Supabase whenever online<br />
+                ✓ Native macOS desktop notifications
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => setMacInstallOpen(false)}>Done</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </TooltipProvider>

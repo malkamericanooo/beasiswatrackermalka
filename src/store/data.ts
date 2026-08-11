@@ -500,11 +500,21 @@ export async function syncAllToCloud() {
   return synced;
 }
 
-// Auto-sync immediately on load to push local data to Supabase
+// Auto-sync immediately on load and when network is restored
 if (typeof window !== "undefined") {
   setTimeout(() => {
-    syncAllToCloud().catch(err => console.warn("[store] Auto-sync failed:", err));
+    if (navigator.onLine) {
+      syncAllToCloud().catch(err => console.warn("[store] Auto-sync failed:", err));
+    }
   }, 1000);
+
+  window.addEventListener("online", () => {
+    syncAllToCloud()
+      .then(() => {
+        window.dispatchEvent(new CustomEvent("app-online-synced"));
+      })
+      .catch(err => console.warn("[store] Online re-sync failed:", err));
+  });
 }
 
 export async function restoreDefaultSeeds() {
