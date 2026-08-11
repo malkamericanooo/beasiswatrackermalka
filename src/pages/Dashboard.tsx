@@ -136,26 +136,17 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-8">
-      {/* University of Toronto Target Motivational Banner */}
-      <Card className="mb-6 border-blue-900/40 bg-[#002A5C] text-white shadow-sm overflow-hidden border">
-        <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <img src="/uoft-logo.svg" alt="University of Toronto Crest" className="w-12 h-12 rounded-lg shadow-sm shrink-0 border border-white/20" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-white/80 font-bold">Dream University Target</span>
-                <Badge variant="outline" className="text-[10px] bg-white/10 text-white border-white/30 font-bold py-0">U of T</Badge>
-              </div>
-              <h2 className="font-bold text-lg text-white leading-tight">University of Toronto</h2>
-              <p className="text-xs text-white/70 italic font-serif">"Velut arbor aevo — As a tree with the passage of time"</p>
-            </div>
-          </div>
-          <div className="hidden sm:block text-right">
-            <span className="text-xs text-white/80 font-mono block">Target Admission 2026/2027</span>
-            <span className="text-xs text-white font-bold uppercase tracking-wider">Stay Disciplined & Focused</span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Official University of Toronto Header Banner */}
+      <div className="mb-6 bg-[#1E3765] text-white rounded-xl p-4 md:p-6 shadow-sm border border-blue-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img src="/uoft-logo.svg" alt="University of Toronto Official Header Logo" className="h-12 md:h-14 w-auto object-contain shrink-0" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="bg-white/10 text-white border-white/20 text-xs font-mono font-bold px-3 py-1">
+            Target Admission 2026/2027
+          </Badge>
+        </div>
+      </div>
 
       <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Dashboard</h1>
       <p className="text-muted-foreground text-sm mb-6 md:mb-8">Track your scholarship application progress & deadlines.</p>
