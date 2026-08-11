@@ -136,15 +136,33 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-8">
-      {/* Official University of Toronto Header Banner */}
-      <div className="mb-6 bg-card text-foreground rounded-xl p-4 md:p-5 shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <img src="/uoft-logo.png" alt="University of Toronto Official Logo" className="h-12 md:h-14 w-auto object-contain shrink-0 rounded" />
+      {/* Official University of Toronto Target Header */}
+      <div className="mb-6 bg-card text-foreground rounded-2xl p-5 md:p-6 shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all">
+        <div className="flex items-center gap-5">
+          <img
+            src="/uoft-crest.png"
+            alt="University of Toronto Coat of Arms"
+            className="h-16 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply dark:mix-blend-normal dark:bg-white/90 dark:p-1.5 rounded-lg border border-border/50 shadow-2xs"
+          />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">Target Institution</span>
+              <Badge variant="outline" className="text-[10px] font-bold bg-primary/10 text-primary border-primary/20 py-0">U of T</Badge>
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold tracking-wider uppercase text-foreground font-serif" style={{ fontFamily: "'Cinzel', serif" }}>
+              University of Toronto
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground italic font-serif" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              "Velut arbor aevo — As a tree with the passage of time"
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-mono font-bold px-3 py-1">
-            Target Admission 2026/2027
+
+        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 pt-3 md:pt-0 border-border/60 gap-2 shrink-0">
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-mono font-bold px-3 py-1">
+            Admission 2026/2027
           </Badge>
+          <span className="text-[11px] text-muted-foreground font-mono">Main Target Campus</span>
         </div>
       </div>
 
