@@ -163,8 +163,9 @@ export default function Reminders() {
             icon: "🔔"
           });
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(`Reminder: ${r.title}`, {
-              body: `${r.description || 'Agenda'} - ${r.startTime} (${r.durationHours} jam)`
+            new Notification(`UofT Target Reminder: ${r.title}`, {
+              body: `${r.description || 'Agenda'} - ${r.startTime} (${r.durationHours}h)`,
+              icon: "/uoft-logo.svg"
             });
           }
           updateRem.mutate({ id: r.id, data: { isNotified: true } });

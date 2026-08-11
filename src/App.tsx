@@ -120,11 +120,11 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
     const perm = await Notification.requestPermission();
     if (perm === "granted") {
       setNotifGranted(true);
-      new Notification("Beasiswa Tracker", {
-        body: "System notifications are active. Daily tasks & deadlines will alert you natively.",
-        icon: "/favicon.svg"
+      new Notification("University of Toronto Tracker", {
+        body: "Velut arbor aevo — Notifications active! Stay disciplined towards your UofT goals.",
+        icon: "/uoft-logo.svg"
       });
-      toast({ title: "Notifications Active", description: "Native daily reminders enabled." });
+      toast({ title: "UofT Notifications Active", description: "Native daily reminders with UofT emblem enabled." });
     } else {
       toast({ title: "Permission Denied", description: "Allow notifications in browser settings.", variant: "destructive" });
     }
@@ -377,9 +377,9 @@ function App() {
 
           if (activeContinuous.length > 0) {
             const first = activeContinuous[0];
-            new Notification("Daily Task Reminder", {
-              body: `${first.title} is active today! (${activeContinuous.length} continuous tasks in progress)`,
-              icon: "/favicon.svg",
+            new Notification("UofT Goal Reminder", {
+              body: `${first.title} is active today! Keep pushing towards University of Toronto.`,
+              icon: "/uoft-logo.svg",
             });
             localStorage.setItem(notifKey, "true");
           }

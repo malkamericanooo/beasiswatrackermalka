@@ -136,6 +136,27 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-8">
+      {/* University of Toronto Target Motivational Banner */}
+      <Card className="mb-6 border-blue-900/40 bg-gradient-to-r from-[#001F3F] via-[#002A5C] to-[#001833] text-white shadow-sm overflow-hidden border">
+        <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <img src="/uoft-logo.svg" alt="University of Toronto Emblem" className="w-12 h-12 rounded-lg shadow-md shrink-0 border border-amber-400/30" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">Dream University Target</span>
+                <Badge variant="outline" className="text-[10px] bg-amber-400/20 text-amber-300 border-amber-400/30 font-bold py-0">U of T</Badge>
+              </div>
+              <h2 className="font-bold text-lg text-white leading-tight">University of Toronto</h2>
+              <p className="text-xs text-blue-200/80 italic font-serif">"Velut arbor aevo — As a tree with the passage of time"</p>
+            </div>
+          </div>
+          <div className="hidden sm:block text-right">
+            <span className="text-xs text-blue-200 font-mono block">Target Admission 2026/2027</span>
+            <span className="text-xs text-amber-300 font-bold">Stay Disciplined & Focused</span>
+          </div>
+        </CardContent>
+      </Card>
+
       <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Dashboard</h1>
       <p className="text-muted-foreground text-sm mb-6 md:mb-8">Track your scholarship application progress & deadlines.</p>
 

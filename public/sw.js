@@ -43,8 +43,8 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : { title: 'Beasiswa Tracker', body: 'New notification!' };
   const options = {
     body: data.body,
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: '/uoft-logo.svg',
+    badge: '/uoft-logo.svg',
     vibrate: [100, 50, 100],
     data: { dateOfArrival: Date.now(), primaryKey: '1' }
   };
