@@ -64,6 +64,8 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
   const [notifGranted, setNotifGranted] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsOnline(navigator.onLine);
@@ -75,8 +77,14 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
         setIsOnline(false);
         toast({ title: "Offline Mode", description: "Changes will be saved locally and synced when back online." });
       };
+      const handlePrompt = (e: Event) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+      };
+
       window.addEventListener("online", handleOn);
       window.addEventListener("offline", handleOff);
+      window.addEventListener("beforeinstallprompt", handlePrompt);
 
       if ("Notification" in window) {
         setNotifGranted(Notification.permission === "granted");
@@ -85,9 +93,24 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       return () => {
         window.removeEventListener("online", handleOn);
         window.removeEventListener("offline", handleOff);
+        window.removeEventListener("beforeinstallprompt", handlePrompt);
       };
     }
   }, [toast]);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === "accepted") {
+          toast({ title: "App Installed", description: "Beasiswa Tracker has been installed on your Mac!" });
+        }
+        setDeferredPrompt(null);
+      });
+    } else {
+      onOpenMacInstall();
+    }
+  };
 
   async function handleEnableNotif() {
     if (!("Notification" in window)) {
@@ -195,7 +218,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       </div>
       
       <button
-        onClick={onOpenMacInstall}
+        onClick={handleInstallClick}
         data-testid="btn-mac-install"
         className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
       >
