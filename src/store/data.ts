@@ -500,6 +500,13 @@ export async function syncAllToCloud() {
   return synced;
 }
 
+// Auto-sync immediately on load to push local data to Supabase
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    syncAllToCloud().catch(err => console.warn("[store] Auto-sync failed:", err));
+  }, 1000);
+}
+
 export async function restoreDefaultSeeds() {
   const seeds: Record<string, any> = {
     universities: UNIVERSITIES_SEED,

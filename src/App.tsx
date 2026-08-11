@@ -18,7 +18,10 @@ import {
   Menu,
   Key,
   CloudUpload,
-  RefreshCw
+  RefreshCw,
+  Bell,
+  BellRing,
+  Smartphone
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -112,6 +115,36 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
     reader.readAsText(file);
   }
 
+  const [notifGranted, setNotifGranted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifGranted(Notification.permission === "granted");
+    }
+  }, []);
+
+  async function handleEnableNotif() {
+    if (!("Notification" in window)) {
+      toast({ title: "Fitur tidak didukung", description: "Browser ini tidak mendukung Notifikasi Sistem.", variant: "destructive" });
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      setNotifGranted(true);
+      new Notification("Beasiswa Tracker Notifications", {
+        body: "Notifikasi browser & sistem berhasil diaktifkan!",
+        icon: "/favicon.svg"
+      });
+      toast({ title: "Notifikasi Aktif", description: "Notifikasi deadline & agenda harian berhasil diaktifkan." });
+    } else {
+      toast({ title: "Izin Ditolak", description: "Izinkan notifikasi di pengaturan browser kamu.", variant: "destructive" });
+    }
+  }
+
+  function handlePwaAppInfo() {
+    alert("Cara Install Aplikasi di HP:\n\n1. Di iPhone (Safari): Klik tombol Share -> 'Add to Home Screen'\n2. Di Android (Chrome): Klik titik tiga -> 'Install App' / 'Add to Home Screen'\n\nAplikasi akan berjalan standalone seperti Mobile App native!");
+  }
+
   async function handleCloudSync() {
     toast({ title: "Syncing ke Cloud...", description: "Mengunggah data lokal ke Supabase database." });
     await syncAllToCloud();
@@ -128,7 +161,30 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
 
   return (
     <div className="px-2 pb-4 border-t border-sidebar-border pt-3 space-y-0.5">
-      <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider px-2 mb-2">Data & Password</p>
+      <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider px-2 mb-2">App & Notifications</p>
+      
+      <button
+        onClick={handleEnableNotif}
+        data-testid="btn-enable-notif"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
+      >
+        {notifGranted ? (
+          <BellRing className="w-4 h-4 shrink-0 text-emerald-400" />
+        ) : (
+          <Bell className="w-4 h-4 shrink-0 text-indigo-400" />
+        )}
+        {notifGranted ? "Notifikasi Aktif" : "Aktifkan Notifikasi"}
+      </button>
+
+      <button
+        onClick={handlePwaAppInfo}
+        data-testid="btn-pwa-info"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
+      >
+        <Smartphone className="w-4 h-4 shrink-0 text-purple-400" />
+        Install App di HP
+      </button>
+
       <button
         onClick={onOpenAuth}
         data-testid="btn-open-auth"
@@ -137,6 +193,7 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
         <Key className="w-4 h-4 shrink-0 text-amber-400" />
         Set Database Password
       </button>
+
       <button
         onClick={handleCloudSync}
         data-testid="btn-cloud-sync"
@@ -145,6 +202,7 @@ function DataActions({ onOpenAuth }: { onOpenAuth: () => void }) {
         <CloudUpload className="w-4 h-4 shrink-0 text-sky-400" />
         Sync ke Supabase
       </button>
+
       <button
         onClick={handleExport}
         data-testid="btn-export-data"
