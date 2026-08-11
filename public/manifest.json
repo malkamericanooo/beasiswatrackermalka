@@ -1,16 +1,16 @@
 {
-  "short_name": "BeasiswaTracker",
-  "name": "Beasiswa Tracker & Task Manager",
+  "short_name": "UofT Tracker",
+  "name": "Beasiswa Tracker — University of Toronto Target",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
+      "src": "/uoft-logo.png",
+      "type": "image/png",
       "sizes": "192x192 512x512"
     }
   ],
   "start_url": "/",
-  "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "theme_color": "#002a5c",
   "display": "standalone",
   "orientation": "portrait",
   "description": "Track scholarship deadlines, school tasks, competitions, and daily agendas."

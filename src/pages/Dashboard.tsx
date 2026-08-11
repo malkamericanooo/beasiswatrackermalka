@@ -137,12 +137,12 @@ export default function Dashboard() {
   return (
     <div className="p-4 md:p-8">
       {/* Official University of Toronto Header Banner */}
-      <div className="mb-6 bg-[#1E3765] text-white rounded-xl p-4 md:p-6 shadow-sm border border-blue-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-6 bg-card text-foreground rounded-xl p-4 md:p-5 shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <img src="/uoft-logo.svg" alt="University of Toronto Official Header Logo" className="h-12 md:h-14 w-auto object-contain shrink-0" />
+          <img src="/uoft-logo.png" alt="University of Toronto Official Logo" className="h-12 md:h-14 w-auto object-contain shrink-0 rounded" />
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-white/10 text-white border-white/20 text-xs font-mono font-bold px-3 py-1">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-mono font-bold px-3 py-1">
             Target Admission 2026/2027
           </Badge>
         </div>
