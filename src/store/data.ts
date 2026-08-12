@@ -534,6 +534,30 @@ if (typeof window !== "undefined") {
       })
       .catch(err => console.warn("[store] Online re-sync failed:", err));
   });
+
+  // Auto-sync to Supabase before tab close using fetch keepalive
+  window.addEventListener("beforeunload", () => {
+    const keys = ["universities", "goals", "cv", "documents", "reminders"];
+    const token = localStorage.getItem("app_password") || "";
+    for (const k of keys) {
+      const localRaw = localStorage.getItem(`beasiswa_${k}`);
+      if (localRaw) {
+        try {
+          const val = JSON.parse(localRaw);
+          const ts = localStorage.getItem(`beasiswa_${k}_ts`) || Date.now().toString();
+          fetch(`/api/data?key=${k}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ value: val, timestamp: parseInt(ts, 10) }),
+            keepalive: true
+          }).catch(() => {});
+        } catch {}
+      }
+    }
+  });
 }
 
 export async function restoreDefaultSeeds() {
