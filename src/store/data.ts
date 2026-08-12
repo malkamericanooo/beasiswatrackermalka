@@ -200,11 +200,15 @@ const getHeaders = () => {
 
 async function fetchFromAPI(key: string, seedData: any) {
   const localKey = `beasiswa_${key}`;
+  const tsKey = `beasiswa_${key}_ts`;
   let localData = null;
+  let localTs = 0;
+
   const localRaw = localStorage.getItem(localKey);
   if (localRaw) {
     try {
       localData = JSON.parse(localRaw);
+      localTs = parseInt(localStorage.getItem(tsKey) || "0", 10);
     } catch {
       localData = null;
     }
@@ -228,9 +232,19 @@ async function fetchFromAPI(key: string, seedData: any) {
     if (res.ok && contentType && contentType.includes("application/json")) {
       const data = await res.json();
       if (data && data.value !== undefined && data.value !== null) {
-        // Supabase has real data -> update localStorage and return
-        localStorage.setItem(localKey, JSON.stringify(data.value));
-        return data.value;
+        const apiTs = data.timestamp || 0;
+        
+        // CRITICAL PROTECTION: Only overwrite localData if API timestamp is strictly NEWER,
+        // or if localData does not exist! If localData exists and is active user work, keep localData!
+        if (localData === null || (apiTs > 0 && apiTs > localTs)) {
+          localStorage.setItem(localKey, JSON.stringify(data.value));
+          if (apiTs) localStorage.setItem(tsKey, apiTs.toString());
+          return data.value;
+        } else {
+          // Local user data is newer or active -> Auto push local data up to Supabase!
+          saveToAPI(key, localData);
+          return localData;
+        }
       } else if (localData !== null) {
         // Supabase row is empty, but local storage HAS user data -> auto upload to Supabase!
         saveToAPI(key, localData);
@@ -245,6 +259,7 @@ async function fetchFromAPI(key: string, seedData: any) {
   if (localData === null && seedData !== null) {
     try {
       localStorage.setItem(localKey, JSON.stringify(seedData));
+      localStorage.setItem(tsKey, Date.now().toString());
     } catch (e) {
       console.warn("Failed to set seed data in localStorage:", e);
     }
@@ -254,8 +269,12 @@ async function fetchFromAPI(key: string, seedData: any) {
 
 async function saveToAPI(key: string, value: any) {
   const localKey = `beasiswa_${key}`;
+  const tsKey = `beasiswa_${key}_ts`;
+  const now = Date.now();
+
   try {
     localStorage.setItem(localKey, JSON.stringify(value));
+    localStorage.setItem(tsKey, now.toString());
   } catch (e) {
     console.error("Failed to write to localStorage:", e);
   }
@@ -266,7 +285,7 @@ async function saveToAPI(key: string, value: any) {
     const res = await fetch(`/api/data?key=${key}`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ value }),
+      body: JSON.stringify({ value, timestamp: now }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
