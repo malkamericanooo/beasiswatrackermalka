@@ -267,6 +267,37 @@ async function fetchFromAPI(key: string, seedData: any) {
   return finalData;
 }
 
+export function getOfflineQueueCount(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const q = localStorage.getItem("beasiswa_offline_queue");
+    return q ? JSON.parse(q).length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function addToOfflineQueue(key: string, value: any) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("beasiswa_offline_queue");
+    const queue: Array<{ key: string; timestamp: number }> = raw ? JSON.parse(raw) : [];
+    if (!queue.find(item => item.key === key)) {
+      queue.push({ key, timestamp: Date.now() });
+    }
+    localStorage.setItem("beasiswa_offline_queue", JSON.stringify(queue));
+    window.dispatchEvent(new CustomEvent("offline-queue-updated"));
+  } catch (e) {
+    console.error("Failed to queue offline change:", e);
+  }
+}
+
+export function clearOfflineQueue() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("beasiswa_offline_queue");
+  window.dispatchEvent(new CustomEvent("offline-queue-updated"));
+}
+
 async function saveToAPI(key: string, value: any) {
   const localKey = `beasiswa_${key}`;
   const tsKey = `beasiswa_${key}_ts`;
@@ -277,6 +308,11 @@ async function saveToAPI(key: string, value: any) {
     localStorage.setItem(tsKey, now.toString());
   } catch (e) {
     console.error("Failed to write to localStorage:", e);
+  }
+
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    addToOfflineQueue(key, value);
+    return;
   }
 
   try {
@@ -295,6 +331,7 @@ async function saveToAPI(key: string, value: any) {
     }
   } catch (e) {
     console.warn(`[data store] saveToAPI fallback for key "${key}":`, e);
+    addToOfflineQueue(key, value);
   }
 }
 
@@ -516,6 +553,7 @@ export async function syncAllToCloud() {
     await saveToAPI(k, val);
     synced++;
   }
+  clearOfflineQueue();
   return synced;
 }
 

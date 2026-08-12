@@ -41,7 +41,7 @@ import CVEditor from "@/pages/CVEditor";
 import Documents from "@/pages/Documents";
 import Reminders from "@/pages/Reminders";
 import NotFound from "@/pages/not-found";
-import { syncAllToCloud, restoreDefaultSeeds, getGoals } from "@/store/data";
+import { syncAllToCloud, restoreDefaultSeeds, getGoals, getOfflineQueueCount } from "@/store/data";
 import type { Goal } from "@/types";
 
 const queryClient = new QueryClient();
@@ -66,16 +66,23 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
+  const [queueCount, setQueueCount] = useState(0);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsOnline(navigator.onLine);
+      setQueueCount(getOfflineQueueCount());
+
       const handleOn = () => {
         setIsOnline(true);
         toast({ title: "Connected Online", description: "Network restored. Auto-syncing offline data to Supabase." });
       };
       const handleOff = () => {
         setIsOnline(false);
-        toast({ title: "Offline Mode", description: "Changes will be saved locally and synced when back online." });
+        toast({ title: "Offline Mode", description: "Changes will be saved locally and queued for cloud sync." });
+      };
+      const handleQueue = () => {
+        setQueueCount(getOfflineQueueCount());
       };
       const handlePrompt = (e: Event) => {
         e.preventDefault();
@@ -84,6 +91,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 
       window.addEventListener("online", handleOn);
       window.addEventListener("offline", handleOff);
+      window.addEventListener("offline-queue-updated", handleQueue);
       window.addEventListener("beforeinstallprompt", handlePrompt);
 
       if ("Notification" in window) {
@@ -93,6 +101,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       return () => {
         window.removeEventListener("online", handleOn);
         window.removeEventListener("offline", handleOff);
+        window.removeEventListener("offline-queue-updated", handleQueue);
         window.removeEventListener("beforeinstallprompt", handlePrompt);
       };
     }
@@ -210,9 +219,9 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
           isOnline ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-300 border-amber-500/30"
         )}>
           {isOnline ? (
-            <span className="flex items-center gap-1"><Wifi className="w-2.5 h-2.5" /> Online (Supabase)</span>
+            <span className="flex items-center gap-1"><Wifi className="w-2.5 h-2.5" /> Online (Synced)</span>
           ) : (
-            <span className="flex items-center gap-1"><WifiOff className="w-2.5 h-2.5" /> Offline (Local)</span>
+            <span className="flex items-center gap-1"><WifiOff className="w-2.5 h-2.5" /> Offline ({queueCount} queued)</span>
           )}
         </Badge>
       </div>
