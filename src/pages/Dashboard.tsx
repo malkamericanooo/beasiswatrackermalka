@@ -140,9 +140,9 @@ export default function Dashboard() {
       <div className="mb-6 bg-card text-foreground rounded-2xl p-5 md:p-6 shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all">
         <div className="flex items-center gap-5">
           <img
-            src="/uoft-crest.png"
+            src="/uoft-crest-clean.png"
             alt="University of Toronto Coat of Arms"
-            className="h-16 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply dark:mix-blend-normal dark:bg-white/90 dark:p-1.5 rounded-lg border border-border/50 shadow-2xs"
+            className="h-16 md:h-20 w-auto object-contain shrink-0 rounded-lg shadow-2xs"
           />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
