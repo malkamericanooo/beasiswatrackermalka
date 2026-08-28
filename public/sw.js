@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beasiswa-tracker-v2';
+const CACHE_NAME = 'beasiswa-tracker-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -34,9 +34,28 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
-  // Network first strategy for HTML and API to guarantee fresh updates in desktop PWA
-  if (event.request.headers.get('accept')?.includes('text/html') || event.request.url.includes('/api/')) {
+
+  const isNavigation = event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html');
+
+  // SPA Navigation handling (Network First -> Fallback to cached index.html for ALL routes offline)
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+          return response;
+        })
+        .catch(async () => {
+          const cachedHtml = (await caches.match('/index.html')) || (await caches.match('/'));
+          return cachedHtml || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } });
+        })
+    );
+    return;
+  }
+
+  // API calls handling
+  if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -49,14 +68,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache first for static assets (images, CSS, JS)
+  // Static assets handling (Cache First -> Fallback to Network)
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
-        return response;
-      });
+      return (
+        cached ||
+        fetch(event.request).then((response) => {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+          return response;
+        })
+      );
     })
   );
 });
@@ -70,7 +92,5 @@ self.addEventListener('push', (event) => {
     vibrate: [100, 50, 100],
     data: { dateOfArrival: Date.now(), primaryKey: '1' }
   };
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
