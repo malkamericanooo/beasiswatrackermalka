@@ -24,7 +24,8 @@ import {
   Smartphone,
   Laptop,
   Wifi,
-  WifiOff
+  WifiOff,
+  Layers
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import Goals from "@/pages/Goals";
 import CVEditor from "@/pages/CVEditor";
 import Documents from "@/pages/Documents";
 import Reminders from "@/pages/Reminders";
+import DesktopWidget from "@/pages/DesktopWidget";
 import NotFound from "@/pages/not-found";
 import { syncAllToCloud, restoreDefaultSeeds, getGoals, getOfflineQueueCount } from "@/store/data";
 import type { Goal } from "@/types";
@@ -227,6 +229,17 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       </div>
       
       <button
+        onClick={() => {
+          window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+        }}
+        data-testid="btn-open-widget"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
+      >
+        <Layers className="w-4 h-4 shrink-0 text-amber-400" />
+        Popout Desktop Widget (Top 8)
+      </button>
+
+      <button
         onClick={handleInstallClick}
         data-testid="btn-mac-install"
         className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
@@ -353,6 +366,7 @@ function Router() {
       <Route path="/berkas" component={Documents} />
       <Route path="/cv-editor" component={CVEditor} />
       <Route path="/reminders" component={Reminders} />
+      <Route path="/widget" component={DesktopWidget} />
       <Route component={NotFound} />
     </Switch>
   );

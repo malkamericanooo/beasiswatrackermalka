@@ -3,12 +3,13 @@ import { Link } from "wouter";
 import { GraduationCap, Clock, Target, ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getUniversities, getGoals, getReminders, saveGoals } from "@/store/data";
 import { getDaysLeft, sortByComposite } from "@/lib/scoring";
 import type { University, Goal, ReminderItem } from "@/types";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Sparkles, Flame, CheckCircle, AlertTriangle } from "lucide-react";
+import { CalendarDays, Sparkles, Flame, CheckCircle, AlertTriangle, Layers, ExternalLink } from "lucide-react";
 
 function getAppStatus(uni: University): "Ready to Submit" | "Submitted" | "Researching" | "Missing Data" {
   if (uni.status === "Submitted") return "Submitted";
@@ -167,7 +168,33 @@ export default function Dashboard() {
       </div>
 
       <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-      <p className="text-muted-foreground text-sm mb-6 md:mb-8">Track your scholarship application progress & deadlines.</p>
+      <p className="text-muted-foreground text-sm mb-6">Track your scholarship application progress & deadlines.</p>
+
+      {/* Mac Floating Desktop Widget Launcher Banner */}
+      <Card className="mb-6 border-amber-500/30 bg-card shadow-xs">
+        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+                Mac Desktop Mini Widget (Top 8 Urgency)
+              </h3>
+              <p className="text-xs text-muted-foreground">Floating mini window otomatis mengurutkan deadline terdekat di desktop Mac kamu.</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => {
+              window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+            }}
+            className="text-xs font-bold shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open Floating Desktop Widget
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* 3-Day Focus Widget Banner */}
       <Card className="mb-6 md:mb-8 border-rose-500/30 bg-gradient-to-r from-rose-500/10 via-amber-500/5 to-purple-500/10 shadow-sm">
