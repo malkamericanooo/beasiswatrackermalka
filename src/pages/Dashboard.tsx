@@ -187,11 +187,14 @@ export default function Dashboard() {
           <Button
             size="sm"
             onClick={() => {
-              window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+              const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+              if (!win || win.closed || typeof win.closed === "undefined") {
+                window.location.href = "/widget";
+              }
             }}
             className="text-xs font-bold shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
           >
-            <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open Floating Desktop Widget
+            <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open Desktop Widget (Top 8)
           </Button>
         </CardContent>
       </Card>

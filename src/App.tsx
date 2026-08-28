@@ -55,6 +55,7 @@ const navItems = [
   { path: "/universities", label: "Universities", icon: University },
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/goals", label: "Goals", icon: Target },
+  { path: "/widget", label: "Desktop Widget", icon: Layers },
   { path: "/berkas", label: "Berkas", icon: FolderOpen },
   { path: "/cv-editor", label: "CV Editor", icon: FileText },
   { path: "/reminders", label: "Reminders", icon: AlarmClock },
@@ -230,13 +231,16 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       
       <button
         onClick={() => {
-          window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+          const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+          if (!win || win.closed || typeof win.closed === "undefined") {
+            window.location.href = "/widget";
+          }
         }}
         data-testid="btn-open-widget"
         className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
       >
         <Layers className="w-4 h-4 shrink-0 text-amber-400" />
-        Popout Desktop Widget (Top 8)
+        Desktop Widget (Top 8)
       </button>
 
       <button
