@@ -430,6 +430,10 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      <div className="mt-8 pt-4 border-t border-border/50 text-center">
+        <span className="text-[10px] font-mono text-muted-foreground">App Version v3.0.0 (Top 8 Widget Enabled)</span>
+      </div>
+
       {/* Top 8 Desktop Widget Modal */}
       <Dialog open={widgetModalOpen} onOpenChange={setWidgetModalOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-slate-950 border-slate-800">
