@@ -1,9 +1,11 @@
-const CACHE_NAME = 'beasiswa-tracker-v1';
+const CACHE_NAME = 'beasiswa-tracker-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.svg'
+  '/favicon.png',
+  '/uoft-logo.png',
+  '/uoft-crest-clean.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -32,9 +34,29 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  
+  // Network first strategy for HTML and API to guarantee fresh updates in desktop PWA
+  if (event.request.headers.get('accept')?.includes('text/html') || event.request.url.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache first for static assets (images, CSS, JS)
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).then((response) => {
+        const cloned = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+        return response;
+      });
     })
   );
 });

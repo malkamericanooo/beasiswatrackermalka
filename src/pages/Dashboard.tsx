@@ -10,6 +10,8 @@ import { getDaysLeft, sortByComposite } from "@/lib/scoring";
 import type { University, Goal, ReminderItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Sparkles, Flame, CheckCircle, AlertTriangle, Layers, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import DesktopWidget from "@/pages/DesktopWidget";
 
 function getAppStatus(uni: University): "Ready to Submit" | "Submitted" | "Researching" | "Missing Data" {
   if (uni.status === "Submitted") return "Submitted";
@@ -28,9 +30,11 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const [, setLocation] = useLocation();
   const [universities, setUniversities] = useState<University[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [reminders, setReminders] = useState<ReminderItem[]>([]);
+  const [widgetModalOpen, setWidgetModalOpen] = useState(false);
 
   const reloadData = () => {
     Promise.all([getUniversities(), getGoals(), getReminders()]).then(([u, g, r]) => {
@@ -184,18 +188,28 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">Floating mini window otomatis mengurutkan deadline terdekat di desktop Mac kamu.</p>
             </div>
           </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
-              if (!win || win.closed || typeof win.closed === "undefined") {
-                window.location.href = "/widget";
-              }
-            }}
-            className="text-xs font-bold shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
-          >
-            <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open Desktop Widget (Top 8)
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setWidgetModalOpen(true)}
+              className="text-xs font-bold border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+            >
+              <Layers className="w-3.5 h-3.5 mr-1.5" /> View In-App Widget
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+                if (!win || win.closed || typeof win.closed === "undefined") {
+                  setLocation("/widget");
+                }
+              }}
+              className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Popout Floating Window
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -415,6 +429,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top 8 Desktop Widget Modal */}
+      <Dialog open={widgetModalOpen} onOpenChange={setWidgetModalOpen}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-slate-950 border-slate-800">
+          <DesktopWidget />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
