@@ -23,64 +23,73 @@ export default function DesktopWidget() {
 
   const loadTop8 = () => {
     setLoading(true);
-    Promise.all([getGoals(), getUniversities(), getReminders()]).then(([goals, unis, reminders]) => {
-      const allList: WidgetItem[] = [];
+    Promise.all([getGoals(), getUniversities(), getReminders()])
+      .then(([rawGoals, rawUnis, rawReminders]) => {
+        const goals = Array.isArray(rawGoals) ? rawGoals : [];
+        const unis = Array.isArray(rawUnis) ? rawUnis : [];
+        const reminders = Array.isArray(rawReminders) ? rawReminders : [];
+        const allList: WidgetItem[] = [];
 
-      // Active Goals
-      (goals as Goal[]).filter(g => !g.completed && g.deadline).forEach(g => {
-        const d = getDaysLeft(g.deadline);
-        allList.push({
-          id: `g_${g.id}`,
-          title: g.title,
-          category: g.category || "Task",
-          deadlineStr: g.deadline!.slice(0, 10),
-          daysLeft: d,
-          type: "goal",
-          completed: false,
-          rawObject: g,
+        // Active Goals
+        goals.filter(g => g && !g.completed && g.deadline).forEach(g => {
+          const d = getDaysLeft(g.deadline);
+          allList.push({
+            id: `g_${g.id}`,
+            title: g.title || "Untitled Goal",
+            category: g.category || "Task",
+            deadlineStr: typeof g.deadline === 'string' ? g.deadline.slice(0, 10) : "",
+            daysLeft: d,
+            type: "goal",
+            completed: false,
+            rawObject: g,
+          });
         });
-      });
 
-      // University Deadlines
-      (unis as University[]).filter(u => u.deadline).forEach(u => {
-        const d = getDaysLeft(u.deadline);
-        allList.push({
-          id: `u_${u.id}`,
-          title: `${u.shortName || u.name} Deadline`,
-          category: "Scholarship",
-          deadlineStr: u.deadline!.slice(0, 10),
-          daysLeft: d,
-          type: "uni",
-          completed: u.status === "Submitted",
-          rawObject: u,
+        // University Deadlines
+        unis.filter(u => u && u.deadline).forEach(u => {
+          const d = getDaysLeft(u.deadline);
+          allList.push({
+            id: `u_${u.id}`,
+            title: `${u.shortName || u.name || "University"} Deadline`,
+            category: "Scholarship",
+            deadlineStr: typeof u.deadline === 'string' ? u.deadline.slice(0, 10) : "",
+            daysLeft: d,
+            type: "uni",
+            completed: u.status === "Submitted",
+            rawObject: u,
+          });
         });
-      });
 
-      // Reminders
-      (reminders as ReminderItem[]).filter(r => !r.isCompleted && r.date).forEach(r => {
-        const d = getDaysLeft(r.date);
-        allList.push({
-          id: `r_${r.id}`,
-          title: r.title,
-          category: "Agenda",
-          deadlineStr: r.date,
-          daysLeft: d,
-          type: "reminder",
-          completed: false,
-          rawObject: r,
+        // Reminders
+        reminders.filter(r => r && !r.isCompleted && r.date).forEach(r => {
+          const d = getDaysLeft(r.date);
+          allList.push({
+            id: `r_${r.id}`,
+            title: r.title || "Untitled Agenda",
+            category: "Agenda",
+            deadlineStr: typeof r.date === 'string' ? r.date : "",
+            daysLeft: d,
+            type: "reminder",
+            completed: false,
+            rawObject: r,
+          });
         });
-      });
 
-      // Automatic Urgency Sorting: closest deadline first
-      allList.sort((a, b) => {
-        if (a.daysLeft === null) return 1;
-        if (b.daysLeft === null) return -1;
-        return a.daysLeft - b.daysLeft;
-      });
+        // Automatic Urgency Sorting: closest deadline first
+        allList.sort((a, b) => {
+          if (a.daysLeft === null) return 1;
+          if (b.daysLeft === null) return -1;
+          return a.daysLeft - b.daysLeft;
+        });
 
-      setItems(allList.slice(0, 8));
-      setLoading(false);
-    });
+        setItems(allList.slice(0, 8));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load widget items:", err);
+        setItems([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

@@ -37,11 +37,18 @@ export default function Dashboard() {
   const [widgetModalOpen, setWidgetModalOpen] = useState(false);
 
   const reloadData = () => {
-    Promise.all([getUniversities(), getGoals(), getReminders()]).then(([u, g, r]) => {
-      setUniversities(u as University[]);
-      setGoals(g as Goal[]);
-      setReminders(r as ReminderItem[]);
-    });
+    Promise.all([getUniversities(), getGoals(), getReminders()])
+      .then(([u, g, r]) => {
+        setUniversities(Array.isArray(u) ? (u as University[]) : []);
+        setGoals(Array.isArray(g) ? (g as Goal[]) : []);
+        setReminders(Array.isArray(r) ? (r as ReminderItem[]) : []);
+      })
+      .catch((err) => {
+        console.error("Failed to load dashboard data:", err);
+        setUniversities([]);
+        setGoals([]);
+        setReminders([]);
+      });
   };
 
   useEffect(() => {
