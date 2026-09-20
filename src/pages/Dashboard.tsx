@@ -341,6 +341,8 @@ export default function Dashboard() {
             <Progress value={goalProgress} className="mt-2 h-2" />
           </CardContent>
         </Card>
+      </div>
+
       {/* Weekly Drill Tracker Milestone Card */}
       <Card className="mb-6 md:mb-8 border-primary/20 bg-gradient-to-r from-primary/5 via-card to-amber-500/5 shadow-xs">
         <CardContent className="p-5">

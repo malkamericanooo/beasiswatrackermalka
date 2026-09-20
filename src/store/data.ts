@@ -1,21 +1,21 @@
 export const UNIVERSITIES_SEED = [
   {
     id: "ucb",
-    name: "University of California, Berkeley",
+    name: "University of California, Berkeley (UCB)",
     shortName: "UC Berkeley",
     country: "USA",
-    program: "Computer Science",
+    program: "Cognitive Science B.A.",
     department: "EECS",
     language: "English",
     applicationOpens: "2026-10-01",
     deadline: "2026-12-01",
     status: "Researching",
     priority: "High",
-    registrationFee: { amount: 80, currency: "USD", source: "agent-estimated" },
+    registrationFee: { amount: 95, currency: "USD", source: "user-provided" },
     documents: [
       { id: "d1", name: "Online Application Form", category: "Document", completed: false },
       { id: "d2", name: "Motivation Letter", category: "Document", completed: false },
-      { id: "d3", name: "IELTS min. 6.5", category: "Language", completed: false },
+      { id: "d3", name: "IELTS min. 6.5", category: "Language", completed: true },
       { id: "d4", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false },
       { id: "d5", name: "JHS Certificate & SHS School Report / Certificate", category: "Academic", completed: false },
       { id: "d6", name: "Copy of Passport", category: "Document", completed: false },
@@ -24,30 +24,27 @@ export const UNIVERSITIES_SEED = [
     ]
   },
   {
-    id: "cmu",
-    name: "Carnegie Mellon University",
-    shortName: "CMU",
+    id: "ucsd",
+    name: "University of California, San Diego (UCSD)",
+    shortName: "UC San Diego",
     country: "USA",
-    program: "Computer Science",
-    department: "CMU School of Computer Science",
+    program: "Cognitive Science B.S. with Specialization in Machine Learning and Neural Computation",
+    department: "Cognitive Science",
     language: "English",
     applicationOpens: "2026-10-01",
     deadline: "2026-12-01",
     status: "Researching",
     priority: "High",
-    registrationFee: { amount: 75, currency: "USD", source: "agent-estimated" },
+    registrationFee: { amount: 95, currency: "USD", source: "user-provided" },
     documents: [
       { id: "d1", name: "Online Application Form", category: "Document", completed: false },
-      { id: "d2", name: "Common Application Writing Supplement (3 short-answer questions)", category: "Document", completed: false },
-      { id: "d3", name: "Personal Statement", category: "Document", completed: false },
-      { id: "d4", name: "IELTS min. 7.5", category: "Language", completed: false },
-      { id: "d5", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false },
-      { id: "d6", name: "JHS Certificate & SHS School Report / Certificate", category: "Academic", completed: false },
-      { id: "d7", name: "SAT Result", category: "Academic", completed: false },
-      { id: "d8", name: "Copy of Passport", category: "Document", completed: false },
-      { id: "d9", name: "Counselor Evaluation", category: "Document", completed: false },
-      { id: "d10", name: "Letter of Recommendation", category: "Document", completed: false },
-      { id: "d11", name: "Additional Documents (Certificate of Achievements, Portfolio, etc.)", category: "Document", completed: false }
+      { id: "d2", name: "Motivation Letter", category: "Document", completed: false },
+      { id: "d3", name: "IELTS min. 6.5", category: "Language", completed: true },
+      { id: "d4", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false },
+      { id: "d5", name: "JHS Certificate & SHS School Report / Certificate", category: "Academic", completed: false },
+      { id: "d6", name: "Copy of Passport", category: "Document", completed: false },
+      { id: "d7", name: "Letter of Recommendation", category: "Document", completed: false },
+      { id: "d8", name: "Additional Documents (Certificate of Achievements, Portfolio, etc.)", category: "Document", completed: false }
     ]
   },
   {
@@ -55,20 +52,20 @@ export const UNIVERSITIES_SEED = [
     name: "University of Sydney",
     shortName: "USyd",
     country: "Australia",
-    program: "Bachelor of Advanced Computing",
-    department: "Bachelor of Advanced Computing",
+    program: "Bachelor of Advanced Computing Or Data Science",
+    department: "Faculty of Engineering",
     language: "English",
     applicationOpens: "2026-01-01",
-    deadline: "2027-03-01",
+    deadline: "2027-03-31",
     status: "Researching",
     priority: "Medium",
-    registrationFee: { amount: 0, currency: "AUD", source: "agent-estimated" },
+    registrationFee: { amount: 150, currency: "AUD", source: "user-provided" },
     documents: [
       { id: "d1", name: "High School Report / Transcript", category: "Academic", completed: false },
       { id: "d2", name: "Letter of Expected Graduation", category: "Academic", completed: false },
       { id: "d3", name: "Copy of Passport", category: "Document", completed: false },
       { id: "d4", name: "Recommendation Letter", category: "Document", completed: false },
-      { id: "d5", name: "IELTS min. 6.5 (min. 6.0 in each component)", category: "Language", completed: false },
+      { id: "d5", name: "IELTS min. 6.5, with min. 6.0 in each components", category: "Language", completed: true },
       { id: "d6", name: "SAT min. 1340", category: "Academic", completed: false },
       { id: "d7", name: "Personal Statement", category: "Document", completed: false },
       { id: "d8", name: "Certificate of Achievements", category: "Document", completed: false }
@@ -79,65 +76,85 @@ export const UNIVERSITIES_SEED = [
     name: "University of Toronto",
     shortName: "UofT",
     country: "Canada",
-    program: "Computer Science",
-    department: "Faculty of Arts and Science",
+    program: "Data Science HBSc",
+    department: "Faculty of Arts & Science",
     language: "English",
     applicationOpens: "2026-09-01",
-    deadline: "2027-01-15",
+    deadline: "2026-11-30",
     status: "Researching",
     priority: "High",
-    registrationFee: { amount: 180, currency: "CAD", source: "agent-estimated" },
+    registrationFee: { amount: 192, currency: "CAD", source: "user-provided" },
     documents: [
       { id: "d1", name: "High School Report / Transcript", category: "Academic", completed: false },
       { id: "d2", name: "Letter of Expected Graduation", category: "Academic", completed: false },
       { id: "d3", name: "Copy of Passport", category: "Document", completed: false },
       { id: "d4", name: "Recommendation Letter", category: "Document", completed: false },
-      { id: "d5", name: "IELTS min. 6.5", category: "Language", completed: false },
-      { id: "d6", name: "SAT (optional)", category: "Academic", completed: false },
+      { id: "d5", name: "IELTS min. 6.5", category: "Language", completed: true },
+      { id: "d6", name: "SAT (optional)", category: "Academic", completed: true },
       { id: "d7", name: "Personal Statement", category: "Document", completed: false },
       { id: "d8", name: "Certificate of Achievements", category: "Document", completed: false }
     ]
   },
   {
-    id: "tsinghua",
-    name: "Tsinghua University",
-    shortName: "Tsinghua",
-    country: "China",
-    program: "Global Talents in Science and Engineering",
-    department: "Department of Electronic Engineering",
+    id: "ubc",
+    name: "University of British Columbia",
+    shortName: "UBC",
+    country: "Canada",
+    program: "Data Science BSc",
+    department: "Faculty of Science",
     language: "English",
-    applicationOpens: "2026-09-30",
-    deadline: "2027-02-28",
-    status: "Researching",
-    priority: "Medium",
-    registrationFee: { amount: 0, currency: "CNY", source: "agent-estimated" },
+    applicationOpens: "2026-10-01",
+    deadline: "2026-11-30",
+    status: "Submitted",
+    priority: "High",
+    registrationFee: { amount: 174, currency: "CAD", source: "user-provided" },
     documents: [
       { id: "d1", name: "High School Report / Transcript", category: "Academic", completed: false },
       { id: "d2", name: "Letter of Expected Graduation", category: "Academic", completed: false },
-      { id: "d3", name: "Copy of Passport (applicant and both parents)", category: "Document", completed: false },
-      { id: "d4", name: "Two Recommendation Letters", category: "Document", completed: false },
-      { id: "d5", name: "CV", category: "Document", completed: false },
-      { id: "d6", name: "IELTS", category: "Language", completed: false },
-      { id: "d7", name: "SAT / A-Level / IB / CSCA", category: "Academic", completed: false },
-      { id: "d8", name: "Self-introduction video", category: "Document", completed: false },
-      { id: "d9", name: "Personal Statement", category: "Document", completed: false },
-      { id: "d10", name: "Financial Sponsor Letter", category: "Document", completed: false },
-      { id: "d11", name: "Certificate of Achievements", category: "Document", completed: false }
+      { id: "d3", name: "Copy of Passport", category: "Document", completed: false },
+      { id: "d4", name: "IELTS 6.5", category: "Language", completed: true },
+      { id: "d5", name: "SAT (Optional)", category: "Academic", completed: true },
+      { id: "d6", name: "Grade 12 Math, Physics G11 Chemistry, Physics", category: "Academic", completed: false }
+    ]
+  },
+  {
+    id: "ucla",
+    name: "University of California, Los Angeles (UCLA)",
+    shortName: "UCLA",
+    country: "USA",
+    program: "Data Science Or Cognitive Science B.S. + Computing Specialization",
+    department: "College of Letters and Science",
+    language: "English",
+    applicationOpens: "2026-10-01",
+    deadline: "2026-11-30",
+    status: "Researching",
+    priority: "High",
+    registrationFee: { amount: 95, currency: "USD", source: "user-provided" },
+    documents: [
+      { id: "d1", name: "Online Application Form", category: "Document", completed: false },
+      { id: "d2", name: "Motivation Letter", category: "Document", completed: false },
+      { id: "d3", name: "Copy of Passport of applicant and both parents", category: "Document", completed: false },
+      { id: "d4", name: "Letter Of Recommendation", category: "Document", completed: false },
+      { id: "d5", name: "IELTS 6.5", category: "Language", completed: false },
+      { id: "d6", name: "Personal Statement", category: "Document", completed: false },
+      { id: "d7", name: "Additional Documents (Certificate of Achievements, Portfolio, etc.)", category: "Document", completed: false },
+      { id: "d8", name: "JHS Certificate & SHS School Report / Certificate", category: "Academic", completed: false },
+      { id: "d9", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false }
     ]
   },
   {
     id: "kyoto",
-    name: "Kyoto University",
-    shortName: "Kyoto",
+    name: "Kyoto University - International Undergraduate Program",
+    shortName: "Kyoto iUP",
     country: "Japan",
     program: "Informatics and Mathematical Science",
-    department: "International Undergraduate Program",
+    department: "Faculty of Engineering",
     language: "Japanese and English",
     applicationOpens: "2026-11-04",
     deadline: "2026-12-04",
     status: "Researching",
     priority: "High",
-    registrationFee: { amount: 17000, currency: "JPY", source: "agent-estimated" },
+    registrationFee: { amount: 9800, currency: "JPY", source: "user-provided" },
     documents: [
       { id: "d1", name: "Passphoto", category: "Document", completed: false },
       { id: "d2", name: "Copy of Passport", category: "Document", completed: false },
@@ -145,34 +162,96 @@ export const UNIVERSITIES_SEED = [
       { id: "d4", name: "School Transcript", category: "Academic", completed: false },
       { id: "d5", name: "Certificate of (expected) Graduation", category: "Academic", completed: false },
       { id: "d6", name: "Teacher Evaluation Form", category: "Document", completed: false },
-      { id: "d7", name: "IELTS min. 6.5", category: "Language", completed: false },
+      { id: "d7", name: "IELTS min. 6.5", category: "Language", completed: true },
       { id: "d8", name: "SAT (ideally 1350 or above)", category: "Academic", completed: false },
       { id: "d9", name: "Essay (up to 600 words)", category: "Document", completed: false },
-      { id: "d10", name: "Certificate of Achievements", category: "Document", completed: false }
+      { id: "d10", name: "Certificate of achievements", category: "Document", completed: false }
     ]
   },
   {
-    id: "purdue",
-    name: "Purdue University",
-    shortName: "Purdue",
-    country: "USA",
-    program: "Computer Science",
-    department: "Department of Computer Science",
+    id: "hkust",
+    name: "Hong Kong University of Science and Technology (HKUST)",
+    shortName: "HKUST",
+    country: "Hongkong",
+    program: "BSc in Data Analytics and Artificial Intelligence in Science",
+    department: "School of Science",
     language: "English",
-    applicationOpens: "2026-08-01",
-    deadline: "2027-01-01",
+    applicationOpens: "2026-10-01",
+    deadline: "2026-11-25",
+    status: "Researching",
+    priority: "High",
+    registrationFee: { amount: 450, currency: "HKD", source: "user-provided" },
+    documents: [
+      { id: "d1", name: "Copy Of Passport", category: "Document", completed: false },
+      { id: "d2", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false },
+      { id: "d3", name: "IELTS 6.5", category: "Language", completed: true },
+      { id: "d4", name: "Nomination of Academic Referee", category: "Document", completed: false },
+      { id: "d5", name: "JHS Certificate & SHS School Report: (TRANSCRIPT)", category: "Academic", completed: false },
+      { id: "d6", name: "SAT 1190 (target ~1350)", category: "Academic", completed: false },
+      { id: "d7", name: "Personal Statement", category: "Document", completed: false }
+    ]
+  },
+  {
+    id: "cuhk",
+    name: "The Chinese University of Hong Kong (CUHK)",
+    shortName: "CUHK",
+    country: "Hongkong",
+    program: "BSc Computational Data Science",
+    department: "Faculty of Science",
+    language: "English",
+    applicationOpens: "2026-10-01",
+    deadline: "2026-11-13",
+    status: "Researching",
+    priority: "High",
+    registrationFee: { amount: 450, currency: "HKD", source: "user-provided" },
+    documents: [
+      { id: "d1", name: "Copy Of Passport", category: "Document", completed: false },
+      { id: "d2", name: "Personal Statement", category: "Document", completed: false },
+      { id: "d3", name: "Nomination of Academic Referee", category: "Document", completed: false },
+      { id: "d4", name: "JHS Certificate & SHS School Report: (TRANSCRIPT)", category: "Academic", completed: false },
+      { id: "d5", name: "IELTS 6.5", category: "Language", completed: true },
+      { id: "d6", name: "Certificate of Graduation / Expected Graduation", category: "Academic", completed: false },
+      { id: "d7", name: "SAT 1190 (target ~1350)", category: "Academic", completed: false }
+    ]
+  },
+  {
+    id: "kuleuven",
+    name: "KU Leuven",
+    shortName: "KU Leuven",
+    country: "Belgium",
+    program: "Engineering and Technology",
+    department: "Faculty of Engineering Technology",
+    language: "English",
+    applicationOpens: "2026-10-01",
+    deadline: "2027-03-01",
     status: "Researching",
     priority: "Medium",
-    registrationFee: { amount: 60, currency: "USD", source: "agent-estimated" },
+    registrationFee: { amount: 100, currency: "EUR", source: "user-provided" },
     documents: [
-      { id: "d1", name: "High School Report / Transcript", category: "Academic", completed: false },
-      { id: "d2", name: "Letter of Expected Graduation", category: "Academic", completed: false },
-      { id: "d3", name: "Copy of Passport", category: "Document", completed: false },
-      { id: "d4", name: "Recommendation Letter", category: "Document", completed: false },
-      { id: "d5", name: "IELTS min. 6.5", category: "Language", completed: false },
-      { id: "d6", name: "SAT Result", category: "Academic", completed: false },
-      { id: "d7", name: "Personal Statement", category: "Document", completed: false },
-      { id: "d8", name: "Extracurricular Activities Record", category: "Document", completed: false }
+      { id: "d1", name: "SAT Math 730, IELTS 6.5", category: "Academic", completed: true },
+      { id: "d2", name: "Motivation Letter", category: "Document", completed: false },
+      { id: "d3", name: "Nilai Rapor + SKL", category: "Academic", completed: false },
+      { id: "d4", name: "Dokumen esensial (Passport, pas photo, etc)", category: "Document", completed: false }
+    ]
+  },
+  {
+    id: "unimelb",
+    name: "The University of Melbourne",
+    shortName: "UniMelb",
+    country: "Australia",
+    program: "Data Science",
+    department: "Faculty of Science",
+    language: "English",
+    applicationOpens: "2026-10-01",
+    deadline: "2027-05-31",
+    status: "Researching",
+    priority: "Medium",
+    registrationFee: { amount: 100, currency: "AUD", source: "user-provided" },
+    documents: [
+      { id: "d1", name: "SAT Math 1210, IELTS 6.5", category: "Academic", completed: true },
+      { id: "d2", name: "Sertif", category: "Document", completed: false },
+      { id: "d3", name: "Nilai Rapor transkrip", category: "Academic", completed: false },
+      { id: "d4", name: "Dokumen esensial (Passport, pas photo, etc)", category: "Document", completed: false }
     ]
   }
 ];
@@ -297,6 +376,26 @@ export const WEEKLY_DRILLS_SEED: WeeklyDrillCategory[] = [
     unit: "sessions",
     durationPerSession: "30 mins",
     description: "Drill past year papers and competition guidelines"
+  },
+  {
+    id: "ptln",
+    title: "PTLN University Research",
+    priority: "High",
+    target: 4,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "45 mins",
+    description: "Research overseas universities (requirements, essays, deadlines, portals)"
+  },
+  {
+    id: "vocab",
+    title: "Vocabulary Drills & 10 Qs Quiz",
+    priority: "High",
+    target: 5,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "30 mins",
+    description: "15 mins vocab drills + 15 mins 10 qs vocab (medium to hard)"
   }
 ];
 
@@ -633,10 +732,12 @@ export async function syncAllToCloud() {
 
 // Auto-sync immediately on load and when network is restored
 if (typeof window !== "undefined") {
-  // Auto-migrate to current routine & screenshot goals
-  const CURRENT_MIGRATION_VERSION = "v2026_09_sat_timo_goals_v5";
+  // Auto-migrate to current routine, 11 universities, screenshot goals, PTLN & Vocab drill
+  const CURRENT_MIGRATION_VERSION = "v2026_09_newest_univ_ptln_vocab_v9";
   const applied = localStorage.getItem("beasiswa_migration_applied");
   if (applied !== CURRENT_MIGRATION_VERSION) {
+    localStorage.setItem("beasiswa_universities", JSON.stringify(UNIVERSITIES_SEED));
+    localStorage.setItem("beasiswa_universities_ts", Date.now().toString());
     localStorage.setItem("beasiswa_goals", JSON.stringify(GOALS_SEED));
     localStorage.setItem("beasiswa_goals_ts", Date.now().toString());
     localStorage.setItem("beasiswa_reminders", JSON.stringify(REMINDERS_SEED));
@@ -644,6 +745,7 @@ if (typeof window !== "undefined") {
     localStorage.setItem("beasiswa_weekly_drills", JSON.stringify(WEEKLY_DRILLS_SEED));
     localStorage.setItem("beasiswa_weekly_drills_ts", Date.now().toString());
     localStorage.setItem("beasiswa_migration_applied", CURRENT_MIGRATION_VERSION);
+    saveToAPI("universities", UNIVERSITIES_SEED);
     saveToAPI("goals", GOALS_SEED);
     saveToAPI("reminders", REMINDERS_SEED);
     saveToAPI("weekly_drills", WEEKLY_DRILLS_SEED);

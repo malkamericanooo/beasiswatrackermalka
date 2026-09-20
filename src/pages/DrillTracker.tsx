@@ -18,7 +18,9 @@ import {
   CheckCircle,
   HelpCircle,
   Calculator,
-  Compass
+  Compass,
+  Globe,
+  Languages
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +32,8 @@ const iconMap: Record<string, any> = {
   math: Calculator,
   evaluation: CheckCircle,
   timo: Compass,
+  ptln: Globe,
+  vocab: Languages,
 };
 
 const priorityStyles: Record<string, string> = {
@@ -245,6 +249,7 @@ export default function DrillTracker() {
             <li><strong>Pagi (07:30 - 09:00)</strong>: TIMO (07:30-08:00) ➔ SAT Prep (08:00-08:40) ➔ School Prep (08:40-09:00).</li>
             <li><strong>Sore (15:10 - 15:40)</strong>: TIMO Preparation drill soal-soal tahun lalu (Senin - Jumat).</li>
             <li><strong>Malam (20:30 - 22:15)</strong>: SAT Prep utama (20:30-22:00) ➔ Persiapan mapel sekolah seperti ENGWA / PPKN (22:00-22:15).</li>
+            <li><strong>PTLN Research</strong>: 4 sesi riset kampus luar negeri per minggu.</li>
             <li><strong>Weekend (Sabtu & Minggu 16:30 - 18:30)</strong>: Full Practice Test / evaluasi kesalahan.</li>
           </ul>
         </CardContent>
