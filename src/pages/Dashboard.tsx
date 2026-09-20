@@ -92,7 +92,7 @@ export default function Dashboard() {
   const recentGoals = sortByComposite(goals.filter((g) => !g.completed)).slice(0, 6);
 
   // Compute 3-Day Focus Items (Deadlines, Tasks, Agendas due in <= 3 days)
-  const items3Days: { id?: string; title: string; category: string; deadline: string; daysLeft: number; type: "goal" | "uni" | "reminder"; priority?: string; completed?: boolean; raw?: Goal }[] = [];
+  const items3Days: { id?: string; title: string; category: string; deadline: string; daysLeft: number; type: "goal" | "uni" | "reminder"; priority?: string; completed?: boolean; raw?: Goal; rawReminder?: ReminderItem }[] = [];
 
   goals.forEach((g) => {
     if (g.deadline) {
@@ -123,6 +123,7 @@ export default function Dashboard() {
         daysLeft: days,
         type: "reminder",
         completed: r.isCompleted,
+        rawReminder: r,
       });
     }
   });
@@ -144,8 +145,14 @@ export default function Dashboard() {
   items3Days.sort((a, b) => a.daysLeft - b.daysLeft);
 
   const handleToggleGoal = async (g: Goal) => {
-    const updated = goals.map((x) => (x.id === g.id ? { ...x, completed: !x.completed } : x));
+    const updated = goals.map((x) => (String(x.id) === String(g.id) ? { ...x, completed: !x.completed } : x));
     await saveGoals(updated);
+    reloadData();
+  };
+
+  const handleToggleReminder = async (r: ReminderItem) => {
+    const updated = reminders.map((x) => (String(x.id) === String(r.id) ? { ...x, isCompleted: !x.isCompleted } : x));
+    await saveReminders(updated);
     reloadData();
   };
 
@@ -284,9 +291,26 @@ export default function Dashboard() {
 
                     {item.raw && (
                       <button
+                        type="button"
                         onClick={() => handleToggleGoal(item.raw!)}
-                        className="text-muted-foreground hover:text-emerald-600 transition-colors p-0.5"
-                        title="Tandai selesai"
+                        className="text-muted-foreground hover:text-emerald-600 transition-colors p-0.5 cursor-pointer"
+                        title={item.completed ? "Tandai belum selesai" : "Tandai selesai"}
+                        aria-label="Toggle goal complete"
+                      >
+                        {item.completed ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Circle className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                    {item.rawReminder && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleReminder(item.rawReminder!)}
+                        className="text-muted-foreground hover:text-emerald-600 transition-colors p-0.5 cursor-pointer"
+                        title={item.completed ? "Tandai belum selesai" : "Tandai selesai"}
+                        aria-label="Toggle reminder complete"
                       >
                         {item.completed ? (
                           <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -478,12 +502,20 @@ export default function Dashboard() {
               {recentGoals.map((g) => (
                 <div key={g.id} className="flex items-center justify-between py-2 border-b border-border last:border-0" data-testid={`goal-${g.id}`}>
                   <div className="flex items-center gap-2 min-w-0">
-                    {g.completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    ) : (
-                      <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
-                    )}
-                    <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleGoal(g)}
+                      className="p-1 -ml-1 text-muted-foreground hover:text-emerald-500 transition-colors shrink-0 cursor-pointer"
+                      title={g.completed ? "Tandai belum selesai" : "Tandai selesai"}
+                      aria-label="Toggle goal complete"
+                    >
+                      {g.completed ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 shrink-0" />
+                      )}
+                    </button>
+                    <div className="min-w-0 cursor-pointer" onClick={() => handleToggleGoal(g)}>
                       <div className={cn("text-sm font-medium truncate", g.completed && "line-through text-muted-foreground")}>
                         {g.title}
                       </div>

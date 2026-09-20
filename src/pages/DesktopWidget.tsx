@@ -99,11 +99,13 @@ export default function DesktopWidget() {
   const toggleComplete = async (item: WidgetItem) => {
     if (item.type === "goal") {
       const gList = (await getGoals()) as Goal[];
-      const updated = gList.map(g => g.id === (item.rawObject as Goal).id ? { ...g, completed: true } : g);
+      const targetId = String((item.rawObject as Goal).id);
+      const updated = gList.map(g => String(g.id) === targetId ? { ...g, completed: !g.completed } : g);
       await saveGoals(updated);
     } else if (item.type === "reminder") {
       const rList = (await getReminders()) as ReminderItem[];
-      const updated = rList.map(r => r.id === (item.rawObject as ReminderItem).id ? { ...r, isCompleted: true } : r);
+      const targetId = String((item.rawObject as ReminderItem).id);
+      const updated = rList.map(r => String(r.id) === targetId ? { ...r, isCompleted: !r.isCompleted } : r);
       await saveReminders(updated);
     }
     loadTop8();

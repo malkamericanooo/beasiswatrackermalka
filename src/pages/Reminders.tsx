@@ -93,8 +93,8 @@ export default function Reminders() {
   });
 
   const completeRem = useMutation({
-    mutationFn: async (id: number) => {
-      const updated = allReminders.map(r => r.id === id ? { ...r, isCompleted: !r.isCompleted } : r);
+    mutationFn: async (id: number | string) => {
+      const updated = allReminders.map(r => String(r.id) === String(id) ? { ...r, isCompleted: !r.isCompleted } : r);
       await saveReminders(updated);
       return id;
     },
@@ -102,8 +102,8 @@ export default function Reminders() {
   });
 
   const deleteRem = useMutation({
-    mutationFn: async (id: number) => {
-      const updated = allReminders.filter(r => r.id !== id);
+    mutationFn: async (id: number | string) => {
+      const updated = allReminders.filter(r => String(r.id) !== String(id));
       await saveReminders(updated);
       return id;
     },
@@ -111,8 +111,8 @@ export default function Reminders() {
   });
 
   const updateRem = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: Partial<ReminderItem> }) => {
-      const updated = allReminders.map(r => r.id === id ? { ...r, ...data } : r);
+    mutationFn: async ({ id, data }: { id: number | string, data: Partial<ReminderItem> }) => {
+      const updated = allReminders.map(r => String(r.id) === String(id) ? { ...r, ...data } : r);
       await saveReminders(updated);
       return id;
     },
@@ -428,14 +428,24 @@ export default function Reminders() {
 
                               <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                                 <button
-                                  onClick={() => handleDelete(rem.id)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(rem.id);
+                                  }}
+                                  aria-label="Hapus agenda"
                                   className={`p-1 rounded transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleComplete(rem.id)}
-                                  className={`p-0.5 rounded-full transition-colors ${
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleComplete(rem.id);
+                                  }}
+                                  aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
+                                  className={`p-1 rounded-full transition-colors cursor-pointer ${
                                     rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"
                                   }`}
                                 >
@@ -504,14 +514,24 @@ export default function Reminders() {
                           </div>
                           <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                             <button
-                              onClick={() => handleDelete(rem.id)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(rem.id);
+                              }}
+                              aria-label="Hapus task"
                               className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleComplete(rem.id)}
-                              className={`p-0.5 transition-colors ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleComplete(rem.id);
+                              }}
+                              aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
+                              className={`p-1 transition-colors cursor-pointer ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
                             >
                               {rem.isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                             </button>
@@ -577,14 +597,24 @@ export default function Reminders() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                     <button
-                      onClick={() => handleDelete(rem.id)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(rem.id);
+                      }}
+                      aria-label="Hapus task"
                       className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleComplete(rem.id)}
-                      className={`p-0.5 ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleComplete(rem.id);
+                      }}
+                      aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
+                      className={`p-1 cursor-pointer transition-colors ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
                     >
                       {rem.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                     </button>
