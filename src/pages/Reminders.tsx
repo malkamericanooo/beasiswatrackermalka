@@ -37,49 +37,7 @@ function pickCategoryIcon(iconId?: string, title: string = "") {
   return CATEGORY_ICONS[Math.abs(hash) % CATEGORY_ICONS.length];
 }
 
-function playNotificationSound() {
-  try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-
-    // Soothing 3-note harmonic chime (C#5 -> F#5 -> A#5) with warm acoustic envelope
-    const notes = [
-      { freq: 554.37, delay: 0, dur: 0.6, peak: 0.06 },
-      { freq: 739.99, delay: 0.08, dur: 0.7, peak: 0.07 },
-      { freq: 932.33, delay: 0.16, dur: 0.9, peak: 0.08 }
-    ];
-
-    notes.forEach(({ freq, delay, dur, peak }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-
-      // Warm low-pass filter eliminates harsh digital highs
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(2000, ctx.currentTime);
-      filter.Q.setValueAtTime(1.0, ctx.currentTime);
-
-      osc.type = "sine";
-      const startTime = ctx.currentTime + delay;
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      // Smooth attack (prevents popping/jumpscare) and gentle exponential decay
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + dur);
-    });
-  } catch (e) {
-    console.warn("Audio Context sound failed:", e);
-  }
-}
+// Audio is completely disabled per user preference (silent visual notifications only)
 
 function formatGap(minutes: number) {
   if (minutes <= 0) return null;
@@ -170,35 +128,56 @@ export default function Reminders() {
   const todayStr = format(today, "yyyy-MM-dd");
   const todayReminders = allReminders.filter(r => r.date === todayStr);
 
-  // Notification and chime check
+  // Strictly single-fire silent notification (NO audio, once per reminder)
+  const notifiedRemindersRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (!todayReminders.length) return;
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
     }
+
     const now = new Date();
     todayReminders.forEach(r => {
-      if (!r.isCompleted && !r.isNotified && r.startTime) {
-        const remTime = parseISO(`${r.date}T${r.startTime}`);
-        const diffMinutes = (remTime.getTime() - now.getTime()) / (1000 * 60);
-        if (diffMinutes > 0 && diffMinutes <= (r.reminderMinutesBefore || 15)) {
-          playNotificationSound();
-          toast(`Agenda Belajar: ${r.title}`, {
-            description: `Mulai pukul ${r.startTime} (${r.durationHours} jam) • Tetap fokus & teratur!`,
-            icon: "✨"
-          });
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(`Agenda: ${r.title}`, {
-              body: `Pukul ${r.startTime} (${r.durationHours}h) • ${r.description || 'Target Belajar Hari Ini'}`,
-              icon: "/uoft-logo.png",
-              silent: true
+      if (!r.isCompleted && r.startTime) {
+        const notifKey = `notif_fired_${r.id}_${r.date}_${r.startTime}`;
+
+        // Guard: Check both in-memory Set and localStorage to guarantee it ONLY fires once
+        if (notifiedRemindersRef.current.has(notifKey) || localStorage.getItem(notifKey)) {
+          return;
+        }
+
+        try {
+          const remTime = parseISO(`${r.date}T${r.startTime}`);
+          const diffMinutes = (remTime.getTime() - now.getTime()) / (1000 * 60);
+
+          // Only notify once within 10 minutes before start time
+          if (diffMinutes >= 0 && diffMinutes <= (r.reminderMinutesBefore || 10)) {
+            // Synchronously mark as fired immediately to prevent duplicate runs
+            notifiedRemindersRef.current.add(notifKey);
+            localStorage.setItem(notifKey, "true");
+
+            // Quiet visual toast
+            toast(`Agenda: ${r.title}`, {
+              description: `Pukul ${r.startTime} (${r.durationHours} jam) • ${r.description || 'Target Belajar'}`,
+              duration: 5000,
             });
+
+            // Silent OS notification (no sound)
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification(`Agenda: ${r.title}`, {
+                body: `Pukul ${r.startTime} (${r.durationHours}h) • ${r.description || 'Target Belajar'}`,
+                icon: "/uoft-logo.png",
+                silent: true,
+              });
+            }
           }
-          updateRem.mutate({ id: r.id, data: { isNotified: true } });
+        } catch (err) {
+          console.warn("[reminders] notification check error:", err);
         }
       }
     });
-  }, [todayReminders, updateRem]);
+  }, [todayReminders]);
 
   const openDialog = (date?: string, time?: string, existing?: ReminderItem) => {
     if (existing) {
