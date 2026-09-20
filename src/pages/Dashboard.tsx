@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { GraduationCap, Clock, Target, ChevronRight, CheckCircle2, Circle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { getUniversities, getGoals, getReminders, saveGoals, getWeeklyDrills } from "@/store/data";
+import { ChevronRight, Check } from "lucide-react";
+import { getUniversities, getGoals, getReminders, saveGoals, saveReminders, getWeeklyDrills } from "@/store/data";
 import { getDaysLeft, sortByComposite } from "@/lib/scoring";
 import type { University, Goal, ReminderItem, WeeklyDrillCategory } from "@/types";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Sparkles, Flame, CheckCircle, AlertTriangle, Layers, ExternalLink } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import DesktopWidget from "@/pages/DesktopWidget";
+
+type Urgency = "urgent" | "soon" | "ok" | "idle";
 
 function getAppStatus(uni: University): "Ready to Submit" | "Submitted" | "Researching" | "Missing Data" {
   if (uni.status === "Submitted") return "Submitted";
@@ -23,11 +18,69 @@ function getAppStatus(uni: University): "Ready to Submit" | "Submitted" | "Resea
   return "Researching";
 }
 
-const priorityColors: Record<string, string> = {
-  High: "bg-rose-100 text-rose-700 border-rose-200",
-  Medium: "bg-amber-100 text-amber-700 border-amber-200",
-  Low: "bg-slate-100 text-slate-600 border-slate-200",
-};
+/** One rule for how far away something is. Every deadline in the app reads
+ *  through this, so a colour always means the same number of days. */
+function urgencyOf(days: number | null): Urgency {
+  if (days === null) return "idle";
+  if (days <= 3) return "urgent";   // includes overdue
+  if (days <= 14) return "soon";
+  return "ok";
+}
+
+function dayLabel(days: number | null): string {
+  if (days === null) return "—";
+  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `${days} days`;
+}
+
+/** Small hairline-separated figure. Replaces the seven coloured stat cards. */
+function Figure({ label, value, sub, testId }: { label: string; value: string | number; sub?: string; testId?: string }) {
+  return (
+    <div className="px-5 py-4 min-w-0">
+      <p className="eyebrow">{label}</p>
+      <p className="mt-1.5 font-mono text-2xl leading-none text-foreground" data-testid={testId}>
+        {value}
+      </p>
+      {sub && <p className="mt-1.5 text-xs text-muted-foreground truncate">{sub}</p>}
+    </div>
+  );
+}
+
+function SectionHeader({ title, href, action }: { title: string; href?: string; action?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 mb-3">
+      <h2 className="text-lg text-foreground">{title}</h2>
+      {href && (
+        <Link href={href}>
+          <span className="text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors inline-flex items-center gap-0.5 shrink-0">
+            {action ?? "View all"} <ChevronRight className="size-3" />
+          </span>
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function Tick({ done, onClick, label }: { done?: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "grid place-items-center size-4 shrink-0 rounded-sm border transition-colors cursor-pointer",
+        done
+          ? "bg-ok border-ok text-background"
+          : "border-border hover:border-foreground/40 text-transparent"
+      )}
+    >
+      <Check className="size-3" strokeWidth={3} />
+    </button>
+  );
+}
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -35,7 +88,7 @@ export default function Dashboard() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [reminders, setReminders] = useState<ReminderItem[]>([]);
   const [drills, setDrills] = useState<WeeklyDrillCategory[]>([]);
-  const [widgetModalOpen, setWidgetModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const reloadData = () => {
     Promise.all([getUniversities(), getGoals(), getReminders(), getWeeklyDrills()])
@@ -51,7 +104,8 @@ export default function Dashboard() {
         setGoals([]);
         setReminders([]);
         setDrills([]);
-      });
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -69,7 +123,6 @@ export default function Dashboard() {
 
   const totalGoals = goals.length;
   const doneGoals = goals.filter((g) => g.completed).length;
-  const goalProgress = totalGoals > 0 ? Math.round((doneGoals / totalGoals) * 100) : 0;
 
   const statusCounts = {
     "Ready to Submit": 0,
@@ -87,17 +140,32 @@ export default function Dashboard() {
       return dl !== null && dl >= 0;
     })
     .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
-    .slice(0, 5);
+    .slice(0, 6);
 
   const recentGoals = sortByComposite(goals.filter((g) => !g.completed)).slice(0, 6);
 
-  // Compute 3-Day Focus Items (Deadlines, Tasks, Agendas due in <= 3 days)
-  const items3Days: { id?: string; title: string; category: string; deadline: string; daysLeft: number; type: "goal" | "uni" | "reminder"; priority?: string; completed?: boolean; raw?: Goal; rawReminder?: ReminderItem }[] = [];
+  const drillDone = drills.reduce((sum, d) => sum + d.completed, 0);
+  const drillTarget = drills.reduce((sum, d) => sum + d.target, 0);
+  const drillPct = drillTarget > 0 ? Math.round((drillDone / drillTarget) * 100) : 0;
+
+  // 3-day focus: goals, agendas and deadlines landing within 72 hours.
+  const items3Days: {
+    id?: string;
+    title: string;
+    category: string;
+    deadline: string;
+    daysLeft: number;
+    type: "goal" | "uni" | "reminder";
+    priority?: string;
+    completed?: boolean;
+    raw?: Goal;
+    rawReminder?: ReminderItem;
+  }[] = [];
 
   goals.forEach((g) => {
     if (g.deadline) {
       const days = getDaysLeft(g.deadline);
-      if (days !== null && days >= 0 && days <= 3) {
+      if (days !== null && days <= 3) {
         items3Days.push({
           id: g.id,
           title: g.title,
@@ -115,7 +183,7 @@ export default function Dashboard() {
 
   reminders.forEach((r) => {
     const days = getDaysLeft(r.date);
-    if (days !== null && days >= 0 && days <= 3) {
+    if (days !== null && days <= 3) {
       items3Days.push({
         title: r.title,
         category: "Agenda",
@@ -130,9 +198,9 @@ export default function Dashboard() {
 
   universities.forEach((u) => {
     const days = getDaysLeft(u.deadline);
-    if (days !== null && days >= 0 && days <= 3) {
+    if (days !== null && days <= 3) {
       items3Days.push({
-        title: `${u.shortName || u.name} Deadline`,
+        title: `${u.shortName || u.name} deadline`,
         category: u.program || "Scholarship",
         deadline: u.deadline,
         daysLeft: days,
@@ -143,405 +211,274 @@ export default function Dashboard() {
   });
 
   items3Days.sort((a, b) => a.daysLeft - b.daysLeft);
+  const openToday = items3Days.filter((i) => !i.completed).length;
 
   const handleToggleGoal = async (g: Goal) => {
     const updated = goals.map((x) => (String(x.id) === String(g.id) ? { ...x, completed: !x.completed } : x));
+    setGoals(updated);
     await saveGoals(updated);
     reloadData();
   };
 
   const handleToggleReminder = async (r: ReminderItem) => {
     const updated = reminders.map((x) => (String(x.id) === String(r.id) ? { ...x, isCompleted: !x.isCompleted } : x));
+    setReminders(updated);
     await saveReminders(updated);
     reloadData();
   };
 
+  const dateLine = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
   return (
-    <div className="p-4 md:p-8">
-      {/* Official University of Toronto Target Header */}
-      <div className="mb-6 bg-card text-foreground rounded-2xl p-5 md:p-6 shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all">
-        <div className="flex items-center gap-5">
+    <div className="mx-auto max-w-[1180px] px-6 md:px-10 py-8 md:py-10">
+      {/* ── Header. The target is a byline, not a billboard. ───────────── */}
+      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pb-5 border-b border-border">
+        <div>
+          <p className="eyebrow">{dateLine}</p>
+          <h1 className="mt-1 text-2xl text-foreground">Dashboard</h1>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
           <img
             src="/uoft-crest-clean.png"
-            alt="University of Toronto Coat of Arms"
-            className="h-16 md:h-20 w-auto object-contain shrink-0 rounded-lg shadow-2xs"
+            alt=""
+            aria-hidden
+            className="h-9 w-auto object-contain opacity-90"
           />
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">Target Institution</span>
-              <Badge variant="outline" className="text-[10px] font-bold bg-primary/10 text-primary border-primary/20 py-0">U of T</Badge>
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-wider uppercase text-foreground font-serif" style={{ fontFamily: "'Cinzel', serif" }}>
-              University of Toronto
-            </h2>
-            <p className="text-xs md:text-sm text-muted-foreground italic font-serif" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-              "Velut arbor aevo — As a tree with the passage of time"
-            </p>
+          <div className="leading-tight">
+            <p className="eyebrow">Target institution</p>
+            <p className="text-sm font-medium text-foreground">University of Toronto</p>
+            <p className="text-xs text-muted-foreground">Data Science HBSc · Admission 2026/27</p>
           </div>
         </div>
+      </header>
 
-        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 pt-3 md:pt-0 border-border/60 gap-2 shrink-0">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-mono font-bold px-3 py-1">
-            Admission 2026/2027
-          </Badge>
-          <span className="text-[11px] text-muted-foreground font-mono">Main Target Campus</span>
-        </div>
-      </div>
+      {/* ── Figures. One band, hairline-separated. Was 7 coloured cards. ─ */}
+      <section className="mt-6 panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-border overflow-hidden">
+        <Figure label="Tracked" value={totalUnis} sub="universities" testId="stat-universities-count" />
+        <Figure
+          label="Due ≤ 30d"
+          value={deadlines30}
+          sub={deadlines30 === 0 ? "nothing imminent" : "approaching"}
+          testId="stat-deadlines-count"
+        />
+        <Figure label="Researching" value={statusCounts["Researching"]} sub="in progress" testId="status-researching" />
+        <Figure label="Ready" value={statusCounts["Ready to Submit"]} sub="docs complete" testId="status-ready-to-submit" />
+        <Figure label="Submitted" value={statusCounts["Submitted"]} sub="sent off" testId="status-submitted" />
+        <Figure
+          label="Goals"
+          value={`${doneGoals}/${totalGoals}`}
+          sub={`${statusCounts["Missing Data"]} apps need docs`}
+          testId="stat-goals-progress"
+        />
+      </section>
 
-      <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-      <p className="text-muted-foreground text-sm mb-6">Track your scholarship application progress & deadlines.</p>
+      {/* ── Today. First thing on the page, because it is the only part
+             that asks you to do something. ────────────────────────────── */}
+      <section className="mt-9">
+        <SectionHeader title="Needs attention" href="/calendar" action="Calendar" />
 
-      {/* Mac Floating Desktop Widget Launcher Banner */}
-      <Card className="mb-6 border-amber-500/30 bg-card shadow-xs">
-        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <Layers className="w-5 h-5" />
+        <div className="panel divide-y divide-border">
+          {loading ? (
+            <div className="px-5 py-8">
+              <div className="h-3 w-40 rounded-sm bg-muted animate-pulse" />
+              <div className="mt-3 h-3 w-64 rounded-sm bg-muted animate-pulse" />
             </div>
-            <div>
-              <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
-                Mac Desktop Mini Widget (Top 8 Urgency)
-              </h3>
-              <p className="text-xs text-muted-foreground">Floating mini window otomatis mengurutkan deadline terdekat di desktop Mac kamu.</p>
+          ) : items3Days.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm text-foreground">Nothing overdue or due in the next three days.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your nearest deadline is {upcoming[0] ? `${upcoming[0].shortName || upcoming[0].name} in ${getDaysLeft(upcoming[0].deadline)} days` : "not set yet"}.
+              </p>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setWidgetModalOpen(true)}
-              className="text-xs font-bold border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-            >
-              <Layers className="w-3.5 h-3.5 mr-1.5" /> View In-App Widget
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
-                if (!win || win.closed || typeof win.closed === "undefined") {
-                  setLocation("/widget");
-                }
-              }}
-              className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white"
-            >
-              <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Popout Floating Window
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 3-Day Focus Widget Banner */}
-      <Card className="mb-6 md:mb-8 border-rose-500/30 bg-gradient-to-r from-rose-500/10 via-amber-500/5 to-purple-500/10 shadow-sm">
-        <CardContent className="p-4 md:p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-500/20 pb-3 mb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-rose-500 text-white shadow-xs">
-                <Flame className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="font-bold text-base text-foreground flex items-center gap-2">
-                  Target & Deadline 3 Hari Kedepan
-                </h2>
-                <p className="text-xs text-muted-foreground">Focus view untuk tugas, deadline, dan agenda mendesak.</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 self-start sm:self-auto text-xs font-bold">
-              {items3Days.length} Mendadak / Urgent
-            </Badge>
-          </div>
-
-          {items3Days.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-2">Tidak ada deadline atau tugas sekolah mendesak dalam 3 hari kedepan.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {items3Days.map((item, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "p-3 rounded-lg border bg-card/80 transition-all flex items-start justify-between gap-2 shadow-2xs",
-                    item.daysLeft === 0 ? "border-rose-500/50 ring-1 ring-rose-500/30" : "border-border"
-                  )}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5 font-bold shrink-0",
-                        item.category === "Lomba" ? "bg-emerald-100 text-emerald-800 border-emerald-300" :
-                        item.category === "Tugas Sekolah" ? "bg-indigo-100 text-indigo-800 border-indigo-300" :
-                        item.category === "Project" ? "bg-amber-100 text-amber-800 border-amber-300" :
-                        item.type === "uni" ? "bg-rose-100 text-rose-800 border-rose-300" :
-                        "bg-purple-100 text-purple-800 border-purple-300"
-                      )}>
-                        {item.category}
-                      </Badge>
-                      <span className="text-[10px] font-mono text-muted-foreground">{item.deadline}</span>
-                    </div>
+            items3Days.map((item, idx) => {
+              const u = urgencyOf(item.daysLeft);
+              const toggle = item.raw
+                ? () => handleToggleGoal(item.raw!)
+                : item.rawReminder
+                  ? () => handleToggleReminder(item.rawReminder!)
+                  : null;
 
-                    <p className={cn("text-xs font-bold text-foreground leading-snug truncate", item.completed && "line-through text-muted-foreground")}>
+              return (
+                <div key={idx} className="group flex items-center gap-4 px-5 py-2.5">
+                  {/* Urgency rail — the only colour in the row. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "h-7 w-0.5 rounded-full shrink-0",
+                      u === "urgent" ? "bg-urgent" : u === "soon" ? "bg-soon" : "bg-border"
+                    )}
+                  />
+
+                  {toggle ? (
+                    <Tick done={item.completed} onClick={toggle} label={item.completed ? "Mark not done" : "Mark done"} />
+                  ) : (
+                    <span className="size-4 shrink-0" />
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={cn(
+                        "text-sm truncate",
+                        item.completed ? "line-through text-muted-foreground" : "text-foreground"
+                      )}
+                    >
                       {item.title}
                     </p>
                   </div>
 
-                  <div className="flex flex-col items-end shrink-0 gap-1">
-                    <Badge variant="outline" className={cn("text-[10px] font-mono font-bold",
-                      item.daysLeft === 0 ? "bg-rose-600 text-white border-0" :
-                      item.daysLeft === 1 ? "bg-amber-500 text-white border-0" : "bg-sky-100 text-sky-700 border-sky-200"
-                    )}>
-                      {item.daysLeft === 0 ? "Hari ini!" : item.daysLeft === 1 ? "Besok" : `${item.daysLeft} hari`}
-                    </Badge>
-
-                    {item.raw && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleGoal(item.raw!)}
-                        className="text-muted-foreground hover:text-emerald-600 transition-colors p-0.5 cursor-pointer"
-                        title={item.completed ? "Tandai belum selesai" : "Tandai selesai"}
-                        aria-label="Toggle goal complete"
-                      >
-                        {item.completed ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Circle className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
-                    {item.rawReminder && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleReminder(item.rawReminder!)}
-                        className="text-muted-foreground hover:text-emerald-600 transition-colors p-0.5 cursor-pointer"
-                        title={item.completed ? "Tandai belum selesai" : "Tandai selesai"}
-                        aria-label="Toggle reminder complete"
-                      >
-                        {item.completed ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Circle className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:mb-8">
-        <Card className="bg-primary text-primary-foreground border-0">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium opacity-80">Universities Tracked</span>
-              <GraduationCap className="w-5 h-5 opacity-70" />
-            </div>
-            <div className="text-4xl font-bold" data-testid="stat-universities-count">{totalUnis}</div>
-            <div className="text-xs opacity-70 mt-1">
-              {statusCounts["Submitted"]} application{statusCounts["Submitted"] !== 1 ? "s" : ""} submitted
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-amber-500 text-white border-0">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium opacity-90">30-Day Deadlines</span>
-              <Clock className="w-5 h-5 opacity-80" />
-            </div>
-            <div className="text-4xl font-bold" data-testid="stat-deadlines-count">{deadlines30}</div>
-            <div className="text-xs opacity-80 mt-1">Approaching fast</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Goals Progress</span>
-              <Target className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="text-3xl font-bold text-foreground" data-testid="stat-goals-progress">
-              {doneGoals} / {totalGoals}
-            </div>
-            <Progress value={goalProgress} className="mt-2 h-2" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Weekly Drill Tracker Milestone Card */}
-      <Card className="mb-6 md:mb-8 border-primary/20 bg-gradient-to-r from-primary/5 via-card to-amber-500/5 shadow-xs">
-        <CardContent className="p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                <Flame className="w-5 h-5 text-amber-500" />
-              </div>
-              <div>
-                <h2 className="font-bold text-base text-foreground flex items-center gap-2">
-                  SAT & TIMO Weekly Milestones
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Progres kuota drill mingguan ({drills.reduce((sum, d) => sum + d.completed, 0)}/{drills.reduce((sum, d) => sum + d.target, 0)} sesi selesai)
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-xs font-bold text-primary">
-                {drills.reduce((sum, d) => sum + d.target, 0) > 0 ? Math.round((drills.reduce((sum, d) => sum + d.completed, 0) / drills.reduce((sum, d) => sum + d.target, 0)) * 100) : 0}% Complete
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setLocation("/drills")}
-                className="text-xs font-bold text-primary border-primary/30 hover:bg-primary/10"
-              >
-                Buka Drill Tracker <ChevronRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </div>
-          </div>
-
-          <Progress 
-            value={drills.reduce((sum, d) => sum + d.target, 0) > 0 ? Math.round((drills.reduce((sum, d) => sum + d.completed, 0) / drills.reduce((sum, d) => sum + d.target, 0)) * 100) : 0} 
-            className="h-2 rounded-full mb-4" 
-          />
-
-          {/* Quick pills */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {drills.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => setLocation("/drills")}
-                className="p-2.5 rounded-lg border border-border/80 bg-card/80 hover:border-primary/50 cursor-pointer transition-colors text-center space-y-1 block w-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <div className="text-[10px] text-muted-foreground truncate font-semibold">{d.title.replace(" Drills", "").replace(" Preparation", "")}</div>
-                <div className="text-xs font-mono font-bold text-foreground">
-                  <span className={cn(d.completed >= d.target ? "text-emerald-400" : "text-primary")}>
-                    {d.completed}
+                  <span className="hidden sm:block text-xs text-muted-foreground truncate max-w-[180px] shrink-0">
+                    {item.category}
                   </span>
-                  /{d.target}
+
+                  <span className="font-mono text-xs text-muted-foreground shrink-0 w-[5.5rem] text-right">
+                    {item.deadline}
+                  </span>
+
+                  <span
+                    className={cn(
+                      "chip shrink-0 w-[4.75rem] justify-center",
+                      u === "urgent" ? "chip-urgent" : u === "soon" ? "chip-soon" : "chip-idle"
+                    )}
+                  >
+                    {dayLabel(item.daysLeft)}
+                  </span>
                 </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              );
+            })
+          )}
+        </div>
 
-      {/* Status Breakdown */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 md:mb-8">
-        {(["Researching", "Ready to Submit", "Submitted", "Missing Data"] as const).map((s) => (
-          <Card key={s}>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground" data-testid={`status-${s.toLowerCase().replace(/\s+/g, "-")}`}>
-                {statusCounts[s]}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">{s}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        {items3Days.length > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {openToday} of {items3Days.length} still open.
+          </p>
+        )}
+      </section>
 
-      {/* Two Panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Upcoming Deadlines */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-foreground">Upcoming Deadlines</h2>
-              <Link href="/calendar">
-                <span className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors">
-                  View Calendar <ChevronRight className="w-3 h-3" />
-                </span>
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {upcoming.length === 0 && (
-                <p className="text-sm text-muted-foreground">No upcoming deadlines.</p>
-              )}
-              {upcoming.map((u) => {
-                const days = getDaysLeft(u.deadline);
-                return (
-                  <div key={u.id} className="flex items-center justify-between py-2 border-b border-border last:border-0" data-testid={`deadline-${u.id}`}>
-                    <div>
-                      <div className="text-sm font-medium text-foreground">{u.name}</div>
-                      <div className="text-xs text-muted-foreground">{u.program}</div>
+      {/* ── Two columns: what is coming, and what you are doing about it. ─ */}
+      <div className="mt-9 grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-9">
+        <section>
+          <SectionHeader title="Upcoming deadlines" href="/universities" action="All universities" />
+          <div className="panel divide-y divide-border">
+            {upcoming.length === 0 && !loading && (
+              <p className="px-5 py-8 text-sm text-muted-foreground text-center">No upcoming deadlines.</p>
+            )}
+            {upcoming.map((u) => {
+              const days = getDaysLeft(u.deadline);
+              const urg = urgencyOf(days);
+              const done = u.documents.filter((d) => d.completed).length;
+              return (
+                <Link key={u.id} href="/universities">
+                  <div
+                    className="flex items-center gap-4 px-5 py-3 cursor-pointer hover:bg-accent/40 transition-colors"
+                    data-testid={`deadline-${u.id}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground truncate">{u.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.program}</p>
                     </div>
-                    <Badge
-                      variant="outline"
+                    <span className="font-mono text-xs text-muted-foreground shrink-0">
+                      {done}/{u.documents.length}
+                    </span>
+                    <span
                       className={cn(
-                        "text-xs font-medium shrink-0",
-                        days !== null && days <= 30
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-sky-50 text-sky-700 border-sky-200"
+                        "chip shrink-0 w-[4.75rem] justify-center",
+                        urg === "urgent" ? "chip-urgent" : urg === "soon" ? "chip-soon" : "chip-idle"
                       )}
                     >
-                      {days !== null ? (days === 0 ? "Today" : `${days}d`) : "—"}
-                    </Badge>
+                      {days !== null ? `${days}d` : "—"}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
-        {/* Recent Goals */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-foreground">Recent Goals</h2>
-              <Link href="/goals">
-                <span className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors">
-                  View All <ChevronRight className="w-3 h-3" />
-                </span>
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {recentGoals.length === 0 && (
-                <p className="text-sm text-muted-foreground">No active goals.</p>
-              )}
-              {recentGoals.map((g) => (
-                <div key={g.id} className="flex items-center justify-between py-2 border-b border-border last:border-0" data-testid={`goal-${g.id}`}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleGoal(g)}
-                      className="p-1 -ml-1 text-muted-foreground hover:text-emerald-500 transition-colors shrink-0 cursor-pointer"
-                      title={g.completed ? "Tandai belum selesai" : "Tandai selesai"}
-                      aria-label="Toggle goal complete"
-                    >
-                      {g.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      ) : (
-                        <Circle className="w-4 h-4 shrink-0" />
-                      )}
-                    </button>
-                    <div className="min-w-0 cursor-pointer" onClick={() => handleToggleGoal(g)}>
-                      <div className={cn("text-sm font-medium truncate", g.completed && "line-through text-muted-foreground")}>
-                        {g.title}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{g.category}</div>
-                    </div>
+        <section>
+          <SectionHeader title="Active goals" href="/goals" />
+          <div className="panel divide-y divide-border">
+            {recentGoals.length === 0 && !loading && (
+              <p className="px-5 py-8 text-sm text-muted-foreground text-center">No active goals.</p>
+            )}
+            {recentGoals.map((g) => {
+              const days = getDaysLeft(g.deadline);
+              const urg = urgencyOf(days);
+              return (
+                <div key={g.id} className="flex items-center gap-3 px-5 py-3" data-testid={`goal-${g.id}`}>
+                  <Tick
+                    done={g.completed}
+                    onClick={() => handleToggleGoal(g)}
+                    label={g.completed ? "Mark not done" : "Mark done"}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("text-sm truncate", g.completed && "line-through text-muted-foreground")}>
+                      {g.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{g.category}</p>
                   </div>
-                  <Badge variant="outline" className={cn("text-xs shrink-0 ml-2", priorityColors[g.priority])}>
-                    {g.priority}
-                  </Badge>
+                  {g.deadline && (
+                    <span
+                      className={cn(
+                        "chip shrink-0",
+                        urg === "urgent" ? "chip-urgent" : urg === "soon" ? "chip-soon" : "chip-idle"
+                      )}
+                    >
+                      {dayLabel(days)}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              );
+            })}
+          </div>
+        </section>
       </div>
 
-      <div className="mt-8 pt-4 border-t border-border/50 text-center">
-        <span className="text-[10px] font-mono text-muted-foreground">App Version v3.0.0 (Top 8 Widget Enabled)</span>
-      </div>
+      {/* ── Weekly prep. A progress figure, not a gradient billboard. ──── */}
+      <section className="mt-9">
+        <SectionHeader title="Weekly prep" href="/drills" action="Drill tracker" />
 
-      {/* Top 8 Desktop Widget Modal */}
-      <Dialog open={widgetModalOpen} onOpenChange={setWidgetModalOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-slate-950 border-slate-800">
-          <DesktopWidget />
-        </DialogContent>
-      </Dialog>
+        <div className="panel p-5">
+          <div className="flex items-baseline justify-between gap-4">
+            <p className="font-mono text-2xl leading-none text-foreground">
+              {drillDone}
+              <span className="text-muted-foreground text-lg">/{drillTarget}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">{drillPct}% of this week's sessions</p>
+          </div>
+
+          <div className="mt-3 h-1 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-foreground/70 rounded-full transition-[width] duration-500"
+              style={{ width: `${drillPct}%` }}
+            />
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border rounded-sm overflow-hidden">
+            {drills.map((d) => {
+              const hit = d.completed >= d.target;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setLocation("/drills")}
+                  className="bg-card hover:bg-accent/50 transition-colors px-3 py-2.5 text-left cursor-pointer"
+                >
+                  <span className="block text-xs text-muted-foreground truncate">
+                    {d.title.replace(" Drills", "").replace(" Preparation", "")}
+                  </span>
+                  <span className={cn("block mt-0.5 font-mono text-sm", hit ? "text-ok" : "text-foreground")}>
+                    {d.completed}
+                    <span className="text-muted-foreground">/{d.target}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

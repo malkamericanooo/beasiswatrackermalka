@@ -584,113 +584,173 @@ export async function saveDocuments(docs: any) {
   await saveToAPI("documents", docs);
 }
 
-const now = new Date();
-const formatDate = (offsetDays: number) => {
-  const d = new Date(now);
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
-};
+export function generateWeeklyRemindersSeed(): ReminderItem[] {
+  const items: ReminderItem[] = [];
+  const baseDate = new Date();
+  
+  // Generate across -3 days to +21 days so current week, past few days, and upcoming weeks are fully covered
+  for (let offset = -3; offset <= 21; offset++) {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + offset);
+    const dateStr = d.toISOString().slice(0, 10);
+    const dayOfWeek = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dateNum = parseInt(dateStr.replace(/-/g, ""), 10);
+    let slot = 1;
 
-export const REMINDERS_SEED: any[] = [
-  {
-    id: 201,
-    title: "TIMO Preparation (Pagi)",
-    description: "Drill TIMO past years & guidelines (Morning session)",
-    date: formatDate(0),
-    startTime: "07:30",
-    endTime: "08:00",
-    durationHours: 0.5,
-    reminderMinutesBefore: 10,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "general",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 202,
-    title: "SAT Prep (Pagi)",
-    description: "General SAT Prep morning session",
-    date: formatDate(0),
-    startTime: "08:00",
-    endTime: "08:40",
-    durationHours: 0.67,
-    reminderMinutesBefore: 10,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "sat",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 203,
-    title: "School Preparation",
-    description: "Making sure school things is fine",
-    date: formatDate(0),
-    startTime: "08:40",
-    endTime: "09:00",
-    durationHours: 0.33,
-    reminderMinutesBefore: 5,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "general",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 204,
-    title: "TIMO Preparation (After School)",
-    description: "Afternoon TIMO drills (Monday - Friday)",
-    date: formatDate(0),
-    startTime: "15:10",
-    endTime: "15:40",
-    durationHours: 0.5,
-    reminderMinutesBefore: 10,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "general",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 205,
-    title: "SAT Prep (Night Main Session)",
-    description: "Main evening SAT Prep focus (~90 mins)",
-    date: formatDate(0),
-    startTime: "20:30",
-    endTime: "22:00",
-    durationHours: 1.5,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "sat",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 206,
-    title: "Preparing for Mapel",
-    description: "Prep for unit test on ENGWA or PPKN",
-    date: formatDate(0),
-    startTime: "22:00",
-    endTime: "22:15",
-    durationHours: 0.25,
-    reminderMinutesBefore: 5,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "general",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 207,
-    title: "SAT Practice Test (Mon/Wed/Weekend)",
-    description: "Full practice test session (Weekend 16:30 - 18:30 or Mon/Wed)",
-    date: formatDate(1),
-    startTime: "16:30",
-    endTime: "18:30",
-    durationHours: 2,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "sat",
-    createdAt: now.toISOString(),
+    // 1. Morning Core (Every single day)
+    items.push({
+      id: dateNum * 100 + slot++,
+      title: "TIMO Preparation (Pagi)",
+      description: "Drill TIMO past years & guidelines (Morning session)",
+      date: dateStr,
+      startTime: "07:30",
+      endTime: "08:00",
+      durationHours: 0.5,
+      reminderMinutesBefore: 10,
+      isCompleted: false,
+      isNotified: false,
+      iconId: "general",
+      createdAt: d.toISOString(),
+    });
+
+    items.push({
+      id: dateNum * 100 + slot++,
+      title: "SAT Prep (Pagi)",
+      description: "General SAT Prep morning session",
+      date: dateStr,
+      startTime: "08:00",
+      endTime: "08:40",
+      durationHours: 0.67,
+      reminderMinutesBefore: 10,
+      isCompleted: false,
+      isNotified: false,
+      iconId: "sat",
+      createdAt: d.toISOString(),
+    });
+
+    items.push({
+      id: dateNum * 100 + slot++,
+      title: "School Preparation",
+      description: "Making sure school things is fine",
+      date: dateStr,
+      startTime: "08:40",
+      endTime: "09:00",
+      durationHours: 0.33,
+      reminderMinutesBefore: 5,
+      isCompleted: false,
+      isNotified: false,
+      iconId: "general",
+      createdAt: d.toISOString(),
+    });
+
+    // 2. After School Core (Monday to Friday only, dayOfWeek 1 - 5)
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      items.push({
+        id: dateNum * 100 + slot++,
+        title: "TIMO Preparation (After School)",
+        description: "Afternoon TIMO drills (Monday - Friday)",
+        date: dateStr,
+        startTime: "15:10",
+        endTime: "15:40",
+        durationHours: 0.5,
+        reminderMinutesBefore: 10,
+        isCompleted: false,
+        isNotified: false,
+        iconId: "general",
+        createdAt: d.toISOString(),
+      });
+    }
+
+    // 3. Additional Monday & Wednesday: Practice Test Study Prep
+    if (dayOfWeek === 1 || dayOfWeek === 3) {
+      items.push({
+        id: dateNum * 100 + slot++,
+        title: "Practice Test Study Prep",
+        description: "Take practice test (Monday/Wednesday study prep)",
+        date: dateStr,
+        startTime: "16:30",
+        endTime: "18:00",
+        durationHours: 1.5,
+        reminderMinutesBefore: 15,
+        isCompleted: false,
+        isNotified: false,
+        iconId: "sat",
+        createdAt: d.toISOString(),
+      });
+    }
+
+    // 4. Additional Monday: Econ & Mapel Focus (ENGWA / PPKN)
+    if (dayOfWeek === 1) {
+      items.push({
+        id: dateNum * 100 + slot++,
+        title: "Econ & Mapel Focus",
+        description: "Monday we do ENGWA or PPKN",
+        date: dateStr,
+        startTime: "19:30",
+        endTime: "20:15",
+        durationHours: 0.75,
+        reminderMinutesBefore: 10,
+        isCompleted: false,
+        isNotified: false,
+        iconId: "general",
+        createdAt: d.toISOString(),
+      });
+    }
+
+    // 5. Additional Weekend (Saturday & Sunday): SAT Prep Practice Test
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      items.push({
+        id: dateNum * 100 + slot++,
+        title: "SAT Prep (Weekend Session)",
+        description: "Weekend SAT Prep & Full Practice Test (16:30 - 18:30)",
+        date: dateStr,
+        startTime: "16:30",
+        endTime: "18:30",
+        durationHours: 2.0,
+        reminderMinutesBefore: 15,
+        isCompleted: false,
+        isNotified: false,
+        iconId: "sat",
+        createdAt: d.toISOString(),
+      });
+    }
+
+    // 6. Night Core (Every single day)
+    items.push({
+      id: dateNum * 100 + slot++,
+      title: "SAT Prep (Night Main Session)",
+      description: "Main evening SAT Prep focus (~90 mins)",
+      date: dateStr,
+      startTime: "20:30",
+      endTime: "22:00",
+      durationHours: 1.5,
+      reminderMinutesBefore: 15,
+      isCompleted: false,
+      isNotified: false,
+      iconId: "sat",
+      createdAt: d.toISOString(),
+    });
+
+    items.push({
+      id: dateNum * 100 + slot++,
+      title: "Preparing for Mapel",
+      description: "Prep for unit test on ENGWA or PPKN",
+      date: dateStr,
+      startTime: "22:00",
+      endTime: "22:15",
+      durationHours: 0.25,
+      reminderMinutesBefore: 5,
+      isCompleted: false,
+      isNotified: false,
+      iconId: "general",
+      createdAt: d.toISOString(),
+    });
   }
-];
+
+  return items;
+}
+
+export const REMINDERS_SEED: ReminderItem[] = generateWeeklyRemindersSeed();
 
 export async function getReminders() {
   return await fetchFromAPI("reminders", REMINDERS_SEED);
@@ -733,7 +793,7 @@ export async function syncAllToCloud() {
 // Auto-sync immediately on load and when network is restored
 if (typeof window !== "undefined") {
   // Auto-migrate to current routine, 11 universities, screenshot goals, PTLN & Vocab drill
-  const CURRENT_MIGRATION_VERSION = "v2026_09_newest_univ_ptln_vocab_v9";
+  const CURRENT_MIGRATION_VERSION = "v2026_09_full_weekly_hardcoded_core_v10";
   const applied = localStorage.getItem("beasiswa_migration_applied");
   if (applied !== CURRENT_MIGRATION_VERSION) {
     localStorage.setItem("beasiswa_universities", JSON.stringify(UNIVERSITIES_SEED));

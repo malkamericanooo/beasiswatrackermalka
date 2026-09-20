@@ -4,15 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { 
-  GraduationCap, 
-  LayoutDashboard, 
-  University, 
-  Calendar, 
-  Target, 
-  FileText, 
-  FolderOpen, 
-  Download, 
+import {
+  LayoutDashboard,
+  University,
+  Calendar,
+  Target,
+  FileText,
+  FolderOpen,
+  Download,
   Upload,
   AlarmClock,
   Menu,
@@ -21,18 +20,23 @@ import {
   RefreshCw,
   Bell,
   BellRing,
-  Smartphone,
   Laptop,
-  Wifi,
-  WifiOff,
   Layers,
-  Flame
+  Flame,
+  MoreHorizontal,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 import Dashboard from "@/pages/Dashboard";
@@ -52,26 +56,50 @@ const queryClient = new QueryClient();
 
 const LS_KEYS = ["beasiswa_universities", "beasiswa_goals", "beasiswa_cv", "beasiswa_documents", "beasiswa_reminders", "beasiswa_weekly_drills"] as const;
 
-const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/universities", label: "Universities", icon: University },
-  { path: "/calendar", label: "Calendar", icon: Calendar },
-  { path: "/goals", label: "Goals", icon: Target },
-  { path: "/drills", label: "Drill Tracker", icon: Flame },
-  { path: "/widget", label: "Desktop Widget", icon: Layers },
-  { path: "/berkas", label: "Berkas", icon: FolderOpen },
-  { path: "/cv-editor", label: "CV Editor", icon: FileText },
-  { path: "/reminders", label: "Reminders", icon: AlarmClock },
+// Grouped so nine destinations read as three decisions, not one long list.
+const navGroups = [
+  {
+    label: "Applications",
+    items: [
+      { path: "/", label: "Dashboard", icon: LayoutDashboard },
+      { path: "/universities", label: "Universities", icon: University },
+      { path: "/berkas", label: "Berkas", icon: FolderOpen },
+      { path: "/cv-editor", label: "CV Editor", icon: FileText },
+    ],
+  },
+  {
+    label: "Schedule",
+    items: [
+      { path: "/calendar", label: "Calendar", icon: Calendar },
+      { path: "/reminders", label: "Reminders", icon: AlarmClock },
+    ],
+  },
+  {
+    label: "Preparation",
+    items: [
+      { path: "/goals", label: "Goals", icon: Target },
+      { path: "/drills", label: "Drill Tracker", icon: Flame },
+      { path: "/widget", label: "Desktop Widget", icon: Layers },
+    ],
+  },
 ];
 
-function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void; onOpenMacInstall: () => void }) {
+function openWidgetWindow(fallback: () => void) {
+  const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
+  if (!win || win.closed || typeof win.closed === "undefined") fallback();
+}
+
+/**
+ * Everything that is app plumbing rather than navigation lives behind one
+ * menu. Previously nine always-visible buttons in five accent colours took
+ * more vertical space in the sidebar than the nav itself.
+ */
+function SidebarFooter({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void; onOpenMacInstall: () => void }) {
   const importRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [notifGranted, setNotifGranted] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
   const [queueCount, setQueueCount] = useState(0);
 
   useEffect(() => {
@@ -81,11 +109,11 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 
       const handleOn = () => {
         setIsOnline(true);
-        toast({ title: "Connected Online", description: "Network restored. Auto-syncing offline data to Supabase." });
+        toast({ title: "Back online", description: "Syncing queued changes to Supabase." });
       };
       const handleOff = () => {
         setIsOnline(false);
-        toast({ title: "Offline Mode", description: "Changes will be saved locally and queued for cloud sync." });
+        toast({ title: "Offline", description: "Changes are saved locally and queued for sync." });
       };
       const handleQueue = () => {
         setQueueCount(getOfflineQueueCount());
@@ -97,8 +125,8 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 
       const handleMigrated = () => {
         toast({
-          title: "Jadwal & Target Diperbarui! 🎯",
-          description: "Target aktif screenshot & jadwal harian SAT/TIMO telah dimuat ke aplikasi kamu.",
+          title: "Jadwal & target diperbarui",
+          description: "Target aktif screenshot & jadwal harian SAT/TIMO telah dimuat.",
         });
       };
 
@@ -116,8 +144,8 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
               newWorker.addEventListener("statechange", () => {
                 if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
                   toast({
-                    title: "Pembaruan Tersedia! 🚀",
-                    description: "Versi baru telah siap. Klik 'Check & Force App Update' di sidebar untuk memuat.",
+                    title: "Update available",
+                    description: "Open the sidebar menu and choose Check for updates to load it.",
                   });
                 }
               });
@@ -145,7 +173,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult: any) => {
         if (choiceResult.outcome === "accepted") {
-          toast({ title: "App Installed", description: "Beasiswa Tracker has been installed on your Mac!" });
+          toast({ title: "App installed", description: "Beasiswa Tracker is now on your Mac." });
         }
         setDeferredPrompt(null);
       });
@@ -156,33 +184,33 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 
   async function handleEnableNotif() {
     if (!("Notification" in window)) {
-      toast({ title: "Not Supported", description: "This browser does not support system notifications.", variant: "destructive" });
+      toast({ title: "Not supported", description: "This browser does not support system notifications.", variant: "destructive" });
       return;
     }
     const perm = await Notification.requestPermission();
     if (perm === "granted") {
       setNotifGranted(true);
-      new Notification("University of Toronto Tracker", {
-        body: "Velut arbor aevo — Notifications active! Stay disciplined towards your UofT goals.",
+      new Notification("Beasiswa Tracker", {
+        body: "Notifications are on. You'll get a daily nudge for active targets.",
         icon: "/uoft-logo.png",
-        silent: true
+        silent: true,
       });
-      toast({ title: "UofT Notifications Active", description: "Native daily reminders with UofT emblem enabled." });
+      toast({ title: "Notifications on", description: "Daily reminders enabled." });
     } else {
-      toast({ title: "Permission Denied", description: "Allow notifications in browser settings.", variant: "destructive" });
+      toast({ title: "Permission denied", description: "Allow notifications in browser settings.", variant: "destructive" });
     }
   }
 
   async function handleCloudSync() {
-    toast({ title: "Syncing to Cloud...", description: "Uploading local data to Supabase database." });
+    toast({ title: "Syncing…", description: "Uploading local data to Supabase." });
     await syncAllToCloud();
-    toast({ title: "Cloud Sync Complete", description: "All local data saved to Supabase cloud." });
+    toast({ title: "Sync complete", description: "All local data saved to the cloud." });
   }
 
   async function handleResetSample() {
     if (confirm("Restore initial sample data? Your local data will be reset to default seeds.")) {
       await restoreDefaultSeeds();
-      toast({ title: "Sample Data Restored", description: "Reloading page..." });
+      toast({ title: "Sample data restored", description: "Reloading…" });
       setTimeout(() => window.location.reload(), 1000);
     }
   }
@@ -212,7 +240,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast({ title: "Backup Exported", description: `beasiswa-backup-${date}.json` });
+    toast({ title: "Backup exported", description: `beasiswa-backup-${date}.json` });
   }
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -233,139 +261,108 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
           }
         }
         if (restored === 0) {
-          toast({ title: "Invalid File", description: "No valid backup data found.", variant: "destructive" });
+          toast({ title: "Invalid file", description: "No valid backup data found.", variant: "destructive" });
           return;
         }
-        toast({ title: "Data Restored", description: `${restored} categories loaded. Reloading...` });
+        toast({ title: "Data restored", description: `${restored} categories loaded. Reloading…` });
         setTimeout(() => window.location.reload(), 1200);
       } catch {
-        toast({ title: "Failed to read file", description: "Ensure valid JSON backup file.", variant: "destructive" });
+        toast({ title: "Could not read file", description: "Make sure it is a valid JSON backup.", variant: "destructive" });
       }
     };
     reader.readAsText(file);
   }
 
   const handleForceUpdateApp = async () => {
-    if ('serviceWorker' in navigator) {
+    if ("serviceWorker" in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
       for (const reg of regs) {
         await reg.unregister();
       }
     }
-    if ('caches' in window) {
+    if ("caches" in window) {
       const keys = await caches.keys();
       for (const k of keys) {
         await caches.delete(k);
       }
     }
-    toast({ title: "App Updated", description: "Cleared old cache and reloading latest deployment..." });
+    toast({ title: "Updating", description: "Cleared cache, reloading latest deployment…" });
     setTimeout(() => {
       window.location.reload();
     }, 500);
   };
 
+  const [, setLocation] = useLocation();
+
   return (
-    <div className="px-2 pb-4 border-t border-sidebar-border pt-3 space-y-0.5">
-      <div className="flex items-center justify-between px-2 mb-2">
-        <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-bold">App Status</span>
-        <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5 font-mono font-semibold",
-          isOnline ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-300 border-amber-500/30"
-        )}>
-          {isOnline ? (
-            <span className="flex items-center gap-1"><Wifi className="w-2.5 h-2.5" /> Online (Synced)</span>
-          ) : (
-            <span className="flex items-center gap-1"><WifiOff className="w-2.5 h-2.5" /> Offline ({queueCount} queued)</span>
-          )}
-        </Badge>
+    <div className="border-t border-sidebar-border px-3 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            aria-hidden
+            className={cn("size-1.5 rounded-full shrink-0", isOnline ? "bg-ok" : "bg-soon")}
+          />
+          <span className="text-xs text-sidebar-foreground/60 truncate">
+            {isOnline ? "Synced" : `Offline · ${queueCount} queued`}
+          </span>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              data-testid="btn-sidebar-menu"
+              aria-label="App settings and data"
+              className="shrink-0 rounded-sm p-1.5 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/10 transition-colors"
+            >
+              <MoreHorizontal className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-56">
+            <DropdownMenuLabel className="eyebrow">Widget</DropdownMenuLabel>
+            <DropdownMenuItem data-testid="btn-open-widget" onSelect={() => openWidgetWindow(() => setLocation("/widget"))}>
+              <Layers className="size-4" /> Pop out desktop widget
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="eyebrow">Data</DropdownMenuLabel>
+            <DropdownMenuItem data-testid="btn-cloud-sync" onSelect={handleCloudSync}>
+              <CloudUpload className="size-4" /> Sync to Supabase
+            </DropdownMenuItem>
+            <DropdownMenuItem data-testid="btn-export-data" onSelect={handleExport}>
+              <Download className="size-4" /> Export backup
+            </DropdownMenuItem>
+            <DropdownMenuItem data-testid="btn-import-data" onSelect={() => importRef.current?.click()}>
+              <Upload className="size-4" /> Import backup
+            </DropdownMenuItem>
+            <DropdownMenuItem data-testid="btn-open-auth" onSelect={onOpenAuth}>
+              <Key className="size-4" /> Database password
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="eyebrow">App</DropdownMenuLabel>
+            <DropdownMenuItem data-testid="btn-enable-notif" onSelect={handleEnableNotif}>
+              {notifGranted ? <BellRing className="size-4" /> : <Bell className="size-4" />}
+              {notifGranted ? "Notifications on" : "Enable notifications"}
+            </DropdownMenuItem>
+            <DropdownMenuItem data-testid="btn-mac-install" onSelect={handleInstallClick}>
+              <Laptop className="size-4" /> Install as Mac app
+            </DropdownMenuItem>
+            <DropdownMenuItem data-testid="btn-force-update" onSelect={handleForceUpdateApp}>
+              <RefreshCw className="size-4" /> Check for updates
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              data-testid="btn-restore-sample"
+              onSelect={handleResetSample}
+              className="text-destructive focus:text-destructive"
+            >
+              <RefreshCw className="size-4" /> Restore sample data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      
-      <button
-        onClick={() => {
-          const win = window.open("/widget", "BeasiswaMacWidget", "width=380,height=600,top=100,left=100,resizable=yes,scrollbars=yes");
-          if (!win || win.closed || typeof win.closed === "undefined") {
-            window.location.href = "/widget";
-          }
-        }}
-        data-testid="btn-open-widget"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <Layers className="w-4 h-4 shrink-0 text-amber-400" />
-        Desktop Widget (Top 8)
-      </button>
 
-      <button
-        onClick={handleForceUpdateApp}
-        data-testid="btn-force-update"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs w-full text-sidebar-foreground/60 hover:text-sidebar-foreground/90 hover:bg-white/10 transition-colors"
-      >
-        <RefreshCw className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-        Check & Force App Update
-      </button>
-
-      <button
-        onClick={handleInstallClick}
-        data-testid="btn-mac-install"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <Laptop className="w-4 h-4 shrink-0 text-sky-400" />
-        Install Mac Desktop App
-      </button>
-
-      <button
-        onClick={handleEnableNotif}
-        data-testid="btn-enable-notif"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        {notifGranted ? (
-          <BellRing className="w-4 h-4 shrink-0 text-emerald-400" />
-        ) : (
-          <Bell className="w-4 h-4 shrink-0 text-indigo-400" />
-        )}
-        {notifGranted ? "Notifications Active" : "Enable Notifications"}
-      </button>
-
-      <button
-        onClick={onOpenAuth}
-        data-testid="btn-open-auth"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <Key className="w-4 h-4 shrink-0 text-amber-400" />
-        Set Database Password
-      </button>
-
-      <button
-        onClick={handleCloudSync}
-        data-testid="btn-cloud-sync"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <CloudUpload className="w-4 h-4 shrink-0 text-purple-400" />
-        Sync to Supabase
-      </button>
-
-      <button
-        onClick={handleExport}
-        data-testid="btn-export-data"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors mb-0.5"
-      >
-        <Download className="w-4 h-4 shrink-0" />
-        Export Backup JSON
-      </button>
-      <button
-        onClick={() => importRef.current?.click()}
-        data-testid="btn-import-data"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm w-full text-sidebar-foreground/80 hover:bg-white/10 transition-colors"
-      >
-        <Upload className="w-4 h-4 shrink-0" />
-        Import Backup JSON
-      </button>
-      <button
-        onClick={handleResetSample}
-        data-testid="btn-restore-sample"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs w-full text-sidebar-foreground/60 hover:bg-white/10 transition-colors pt-2 border-t border-sidebar-border/40 mt-1"
-      >
-        <RefreshCw className="w-3.5 h-3.5 shrink-0" />
-        Restore Sample Data
-      </button>
       <input
         ref={importRef}
         type="file"
@@ -381,40 +378,60 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
 function NavLinks() {
   const [location] = useLocation();
   return (
-    <nav className="flex-1 px-2 pt-4">
-      <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider px-2 mb-2">Menu</p>
-      {navItems.map(({ path, label, icon: Icon }) => {
-        const isActive = path === "/" ? location === "/" : location.startsWith(path);
-        return (
-          <Link key={path} href={path}>
-            <div
-              data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm mb-0.5 cursor-pointer transition-colors",
-                isActive
-                  ? "bg-white/15 text-white font-medium"
-                  : "hover:bg-white/10 text-sidebar-foreground/80"
-              )}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-            </div>
-          </Link>
-        );
-      })}
+    <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      {navGroups.map((group) => (
+        <div key={group.label}>
+          <p className="eyebrow px-2 mb-1.5 text-sidebar-foreground/40">{group.label}</p>
+          {group.items.map(({ path, label, icon: Icon }) => {
+            const isActive = path === "/" ? location === "/" : location.startsWith(path);
+            return (
+              <Link key={path} href={path}>
+                <div
+                  data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+                  className={cn(
+                    "relative flex items-center gap-2.5 rounded-sm px-2 py-1.5 text-sm cursor-pointer transition-colors",
+                    isActive
+                      ? "bg-white/10 text-sidebar-foreground font-medium"
+                      : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-white/5"
+                  )}
+                >
+                  {/* Active state reads as a margin rule, not a filled pill. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full transition-colors",
+                      isActive ? "bg-sidebar-foreground/70" : "bg-transparent"
+                    )}
+                  />
+                  <Icon className="size-4 shrink-0" strokeWidth={1.75} />
+                  {label}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
+  );
+}
+
+function SidebarBrand() {
+  return (
+    <div className="px-4 py-4 border-b border-sidebar-border">
+      <span className="block text-sm font-medium tracking-tight text-sidebar-foreground">Beasiswa Tracker</span>
+      <span className="block text-2xs tracking-[0.08em] uppercase text-sidebar-foreground/40 mt-0.5">
+        Admission 2026/27
+      </span>
+    </div>
   );
 }
 
 function Sidebar({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void; onOpenMacInstall: () => void }) {
   return (
-    <aside className="hidden md:flex flex-col w-52 bg-sidebar text-sidebar-foreground shrink-0 border-r border-sidebar-border min-h-screen sticky top-0">
-      <div className="px-4 py-5 flex items-center gap-2 border-b border-sidebar-border">
-        <GraduationCap className="w-5 h-5 shrink-0" />
-        <span className="font-semibold text-sm">Beasiswa Tracker</span>
-      </div>
+    <aside className="hidden md:flex flex-col w-56 bg-sidebar text-sidebar-foreground shrink-0 border-r border-sidebar-border h-screen sticky top-0">
+      <SidebarBrand />
       <NavLinks />
-      <DataActions onOpenAuth={onOpenAuth} onOpenMacInstall={onOpenMacInstall} />
+      <SidebarFooter onOpenAuth={onOpenAuth} onOpenMacInstall={onOpenMacInstall} />
     </aside>
   );
 }
@@ -443,8 +460,8 @@ function App() {
 
   useEffect(() => {
     const handler = () => setAuthOpen(true);
-    window.addEventListener('auth-error', handler);
-    return () => window.removeEventListener('auth-error', handler);
+    window.addEventListener("auth-error", handler);
+    return () => window.removeEventListener("auth-error", handler);
   }, []);
 
   // Daily Continuous Task Notification Checker
@@ -464,8 +481,8 @@ function App() {
 
           if (activeContinuous.length > 0) {
             const first = activeContinuous[0];
-            new Notification("UofT Goal Reminder", {
-              body: `${first.title} is active today! Keep pushing towards University of Toronto.`,
+            new Notification("Active today", {
+              body: `${first.title} is active today.`,
               icon: "/uoft-logo.png",
               silent: true,
             });
@@ -491,32 +508,26 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <div className="flex flex-col md:flex-row min-h-screen bg-background">
             {/* Mobile Header */}
-            <div className="md:hidden flex items-center justify-between p-4 border-b bg-sidebar text-sidebar-foreground">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-5 h-5" />
-                <span className="font-semibold text-sm">Beasiswa Tracker</span>
-              </div>
+            <div className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar text-sidebar-foreground">
+              <span className="text-sm font-medium tracking-tight">Beasiswa Tracker</span>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-white/10">
-                    <Menu className="w-5 h-5" />
+                    <Menu className="size-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground border-r-sidebar-border">
                   <div className="flex flex-col h-full">
-                    <div className="px-4 py-5 flex items-center gap-2 border-b border-sidebar-border">
-                      <GraduationCap className="w-5 h-5 shrink-0" />
-                      <span className="font-semibold text-sm">Beasiswa Tracker</span>
-                    </div>
+                    <SidebarBrand />
                     <NavLinks />
-                    <DataActions onOpenAuth={openAuth} onOpenMacInstall={openMacInstall} />
+                    <SidebarFooter onOpenAuth={openAuth} onOpenMacInstall={openMacInstall} />
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
 
             <Sidebar onOpenAuth={openAuth} onOpenMacInstall={openMacInstall} />
-            <main className="flex-1 overflow-y-auto min-h-0 md:min-h-screen">
+            <main className="flex-1 min-w-0 overflow-y-auto min-h-0 md:min-h-screen">
               <Router />
             </main>
           </div>
@@ -527,12 +538,12 @@ function App() {
         <Dialog open={authOpen} onOpenChange={setAuthOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Authentication Required</DialogTitle>
+              <DialogTitle>Authentication required</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <p className="text-sm text-muted-foreground">Please enter the application password to access the database.</p>
+            <div className="space-y-4 pt-1">
+              <p className="text-sm text-muted-foreground">Enter the application password to access the database.</p>
               <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
-              <Button onClick={handleLogin} className="w-full">Login</Button>
+              <Button onClick={handleLogin} className="w-full">Log in</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -541,40 +552,29 @@ function App() {
         <Dialog open={macInstallOpen} onOpenChange={setMacInstallOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Laptop className="w-5 h-5 text-sky-500" />
-                Install Desktop App on macOS
-              </DialogTitle>
+              <DialogTitle>Install as a Mac app</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-2 text-sm">
-              <p className="text-xs text-muted-foreground">
-                You can install <strong>Beasiswa Tracker</strong> as a native Mac app directly on your Dock and Launchpad!
-              </p>
+            <div className="space-y-4 py-1">
+              <ol className="space-y-3 text-sm">
+                <li className="grid grid-cols-[auto_1fr] gap-3">
+                  <span className="font-mono text-xs text-muted-foreground pt-0.5">01</span>
+                  <span>
+                    <span className="font-medium block">Safari</span>
+                    <span className="text-muted-foreground">File → Add to Dock…</span>
+                  </span>
+                </li>
+                <li className="grid grid-cols-[auto_1fr] gap-3">
+                  <span className="font-mono text-xs text-muted-foreground pt-0.5">02</span>
+                  <span>
+                    <span className="font-medium block">Chrome or Brave</span>
+                    <span className="text-muted-foreground">Install icon in the address bar, or ⋮ → Save and Share → Install.</span>
+                  </span>
+                </li>
+              </ol>
 
-              <div className="space-y-3 bg-muted/40 p-3 rounded-lg border border-border text-xs">
-                <div className="space-y-1">
-                  <span className="font-bold text-foreground block">Option 1: Safari (macOS Sonoma / Sequoia)</span>
-                  <p className="text-muted-foreground">
-                    1. Click <strong>File</strong> in the top macOS menu bar.<br />
-                    2. Click <strong>Add to Dock...</strong><br />
-                    3. Launch directly from your macOS Dock or Launchpad!
-                  </p>
-                </div>
-
-                <div className="space-y-1 border-t pt-2">
-                  <span className="font-bold text-foreground block">Option 2: Google Chrome / Brave</span>
-                  <p className="text-muted-foreground">
-                    1. Look at the right side of the address bar for the <strong>Install Icon (⤓)</strong>.<br />
-                    2. Or click the <strong>⋮ Menu</strong> -&gt; <strong>Save and Share</strong> -&gt; <strong>Install Beasiswa Tracker</strong>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2.5 rounded border border-emerald-500/20">
-                ✓ Full offline support (works without internet)<br />
-                ✓ Auto-syncs to Supabase whenever online<br />
-                ✓ Native macOS desktop notifications
+              <div className="border-t pt-3 space-y-1 text-xs text-muted-foreground">
+                <p>Works offline, syncs to Supabase when back online, and sends native notifications.</p>
               </div>
             </div>
 
