@@ -39,18 +39,43 @@ function pickCategoryIcon(iconId?: string, title: string = "") {
 
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    // Soothing 3-note harmonic chime (C#5 -> F#5 -> A#5) with warm acoustic envelope
+    const notes = [
+      { freq: 554.37, delay: 0, dur: 0.6, peak: 0.06 },
+      { freq: 739.99, delay: 0.08, dur: 0.7, peak: 0.07 },
+      { freq: 932.33, delay: 0.16, dur: 0.9, peak: 0.08 }
+    ];
+
+    notes.forEach(({ freq, delay, dur, peak }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      // Warm low-pass filter eliminates harsh digital highs
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(2000, ctx.currentTime);
+      filter.Q.setValueAtTime(1.0, ctx.currentTime);
+
+      osc.type = "sine";
+      const startTime = ctx.currentTime + delay;
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      // Smooth attack (prevents popping/jumpscare) and gentle exponential decay
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + dur);
+    });
   } catch (e) {
     console.warn("Audio Context sound failed:", e);
   }
@@ -158,14 +183,15 @@ export default function Reminders() {
         const diffMinutes = (remTime.getTime() - now.getTime()) / (1000 * 60);
         if (diffMinutes > 0 && diffMinutes <= (r.reminderMinutesBefore || 15)) {
           playNotificationSound();
-          toast(`Reminder: ${r.title}`, {
-            description: `Waktunya dimulai! (${r.startTime}) — Duration: ${r.durationHours}h`,
-            icon: "🔔"
+          toast(`Agenda Belajar: ${r.title}`, {
+            description: `Mulai pukul ${r.startTime} (${r.durationHours} jam) • Tetap fokus & teratur!`,
+            icon: "✨"
           });
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(`UofT Target Reminder: ${r.title}`, {
-              body: `${r.description || 'Agenda'} - ${r.startTime} (${r.durationHours}h)`,
-              icon: "/uoft-logo.png"
+            new Notification(`Agenda: ${r.title}`, {
+              body: `Pukul ${r.startTime} (${r.durationHours}h) • ${r.description || 'Target Belajar Hari Ini'}`,
+              icon: "/uoft-logo.png",
+              silent: true
             });
           }
           updateRem.mutate({ id: r.id, data: { isNotified: true } });

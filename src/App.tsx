@@ -164,7 +164,8 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
       setNotifGranted(true);
       new Notification("University of Toronto Tracker", {
         body: "Velut arbor aevo — Notifications active! Stay disciplined towards your UofT goals.",
-        icon: "/uoft-logo.png"
+        icon: "/uoft-logo.png",
+        silent: true
       });
       toast({ title: "UofT Notifications Active", description: "Native daily reminders with UofT emblem enabled." });
     } else {
@@ -466,6 +467,7 @@ function App() {
             new Notification("UofT Goal Reminder", {
               body: `${first.title} is active today! Keep pushing towards University of Toronto.`,
               icon: "/uoft-logo.png",
+              silent: true,
             });
             localStorage.setItem(notifKey, "true");
           }
