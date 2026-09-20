@@ -25,7 +25,8 @@ import {
   Laptop,
   Wifi,
   WifiOff,
-  Layers
+  Layers,
+  Flame
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import Dashboard from "@/pages/Dashboard";
 import Universities from "@/pages/Universities";
 import CalendarPage from "@/pages/Calendar";
 import Goals from "@/pages/Goals";
+import DrillTracker from "@/pages/DrillTracker";
 import CVEditor from "@/pages/CVEditor";
 import Documents from "@/pages/Documents";
 import Reminders from "@/pages/Reminders";
@@ -48,13 +50,14 @@ import type { Goal } from "@/types";
 
 const queryClient = new QueryClient();
 
-const LS_KEYS = ["beasiswa_universities", "beasiswa_goals", "beasiswa_cv", "beasiswa_documents", "beasiswa_reminders"] as const;
+const LS_KEYS = ["beasiswa_universities", "beasiswa_goals", "beasiswa_cv", "beasiswa_documents", "beasiswa_reminders", "beasiswa_weekly_drills"] as const;
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/universities", label: "Universities", icon: University },
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/goals", label: "Goals", icon: Target },
+  { path: "/drills", label: "Drill Tracker", icon: Flame },
   { path: "/widget", label: "Desktop Widget", icon: Layers },
   { path: "/berkas", label: "Berkas", icon: FolderOpen },
   { path: "/cv-editor", label: "CV Editor", icon: FileText },
@@ -92,10 +95,36 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
         setDeferredPrompt(e);
       };
 
+      const handleMigrated = () => {
+        toast({
+          title: "Jadwal & Target Diperbarui! 🎯",
+          description: "Target aktif screenshot & jadwal harian SAT/TIMO telah dimuat ke aplikasi kamu.",
+        });
+      };
+
       window.addEventListener("online", handleOn);
       window.addEventListener("offline", handleOff);
       window.addEventListener("offline-queue-updated", handleQueue);
       window.addEventListener("beforeinstallprompt", handlePrompt);
+      window.addEventListener("app-data-migrated", handleMigrated);
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.addEventListener("updatefound", () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  toast({
+                    title: "Pembaruan Tersedia! 🚀",
+                    description: "Versi baru telah siap. Klik 'Check & Force App Update' di sidebar untuk memuat.",
+                  });
+                }
+              });
+            }
+          });
+        });
+      }
 
       if ("Notification" in window) {
         setNotifGranted(Notification.permission === "granted");
@@ -106,6 +135,7 @@ function DataActions({ onOpenAuth, onOpenMacInstall }: { onOpenAuth: () => void;
         window.removeEventListener("offline", handleOff);
         window.removeEventListener("offline-queue-updated", handleQueue);
         window.removeEventListener("beforeinstallprompt", handlePrompt);
+        window.removeEventListener("app-data-migrated", handleMigrated);
       };
     }
   }, [toast]);
@@ -395,6 +425,7 @@ function Router() {
       <Route path="/universities" component={Universities} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/goals" component={Goals} />
+      <Route path="/drills" component={DrillTracker} />
       <Route path="/berkas" component={Documents} />
       <Route path="/cv-editor" component={CVEditor} />
       <Route path="/reminders" component={Reminders} />

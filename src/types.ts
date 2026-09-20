@@ -114,3 +114,15 @@ export interface ReminderItem {
   iconId?: string;
   createdAt: string;
 }
+
+export interface WeeklyDrillCategory {
+  id: string;
+  title: string;
+  priority: Priority;
+  target: number;
+  completed: number;
+  unit: string;
+  durationPerSession: string;
+  description: string;
+}
+

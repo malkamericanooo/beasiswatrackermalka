@@ -5,9 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { getUniversities, getGoals, getReminders, saveGoals } from "@/store/data";
+import { getUniversities, getGoals, getReminders, saveGoals, getWeeklyDrills } from "@/store/data";
 import { getDaysLeft, sortByComposite } from "@/lib/scoring";
-import type { University, Goal, ReminderItem } from "@/types";
+import type { University, Goal, ReminderItem, WeeklyDrillCategory } from "@/types";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Sparkles, Flame, CheckCircle, AlertTriangle, Layers, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -34,20 +34,23 @@ export default function Dashboard() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [reminders, setReminders] = useState<ReminderItem[]>([]);
+  const [drills, setDrills] = useState<WeeklyDrillCategory[]>([]);
   const [widgetModalOpen, setWidgetModalOpen] = useState(false);
 
   const reloadData = () => {
-    Promise.all([getUniversities(), getGoals(), getReminders()])
-      .then(([u, g, r]) => {
+    Promise.all([getUniversities(), getGoals(), getReminders(), getWeeklyDrills()])
+      .then(([u, g, r, d]) => {
         setUniversities(Array.isArray(u) ? (u as University[]) : []);
         setGoals(Array.isArray(g) ? (g as Goal[]) : []);
         setReminders(Array.isArray(r) ? (r as ReminderItem[]) : []);
+        setDrills(Array.isArray(d) ? (d as WeeklyDrillCategory[]) : []);
       })
       .catch((err) => {
         console.error("Failed to load dashboard data:", err);
         setUniversities([]);
         setGoals([]);
         setReminders([]);
+        setDrills([]);
       });
   };
 
@@ -338,7 +341,64 @@ export default function Dashboard() {
             <Progress value={goalProgress} className="mt-2 h-2" />
           </CardContent>
         </Card>
-      </div>
+      {/* Weekly Drill Tracker Milestone Card */}
+      <Card className="mb-6 md:mb-8 border-primary/20 bg-gradient-to-r from-primary/5 via-card to-amber-500/5 shadow-xs">
+        <CardContent className="p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <Flame className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h2 className="font-bold text-base text-foreground flex items-center gap-2">
+                  SAT & TIMO Weekly Milestones
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Progres kuota drill mingguan ({drills.reduce((sum, d) => sum + d.completed, 0)}/{drills.reduce((sum, d) => sum + d.target, 0)} sesi selesai)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs font-bold text-primary">
+                {drills.reduce((sum, d) => sum + d.target, 0) > 0 ? Math.round((drills.reduce((sum, d) => sum + d.completed, 0) / drills.reduce((sum, d) => sum + d.target, 0)) * 100) : 0}% Complete
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setLocation("/drills")}
+                className="text-xs font-bold text-primary border-primary/30 hover:bg-primary/10"
+              >
+                Buka Drill Tracker <ChevronRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+
+          <Progress 
+            value={drills.reduce((sum, d) => sum + d.target, 0) > 0 ? Math.round((drills.reduce((sum, d) => sum + d.completed, 0) / drills.reduce((sum, d) => sum + d.target, 0)) * 100) : 0} 
+            className="h-2 rounded-full mb-4" 
+          />
+
+          {/* Quick pills */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {drills.map((d) => (
+              <div
+                key={d.id}
+                onClick={() => setLocation("/drills")}
+                className="p-2.5 rounded-lg border border-border/80 bg-card/80 hover:border-primary/50 cursor-pointer transition-all text-center space-y-1"
+              >
+                <div className="text-[10px] text-muted-foreground truncate font-semibold">{d.title.replace(" Drills", "").replace(" Preparation", "")}</div>
+                <div className="text-xs font-mono font-bold text-foreground">
+                  <span className={cn(d.completed >= d.target ? "text-emerald-400" : "text-primary")}>
+                    {d.completed}
+                  </span>
+                  /{d.target}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Status Breakdown */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 md:mb-8">

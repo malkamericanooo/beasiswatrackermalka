@@ -177,17 +177,127 @@ export const UNIVERSITIES_SEED = [
   }
 ];
 
+import type { WeeklyDrillCategory } from "@/types";
+
 export const GOALS_SEED = [
-  { id: "g_ppkn_swot", title: "Tugas Miss Lydia PPKN SWOT", category: "Tugas Sekolah", priority: "High", startDate: "2026-08-11", deadline: "2026-08-11", time: "08:00", description: "Tugas Analisis SWOT Pelajaran PPKN Miss Lydia", completed: false },
-  { id: "g_bindo_web", title: "Tugas Web Bu Susanti B.Indo", category: "Tugas Sekolah", priority: "High", startDate: "2026-08-11", deadline: "2026-08-11", time: "10:00", description: "Pengumpulan Website Tugas Bahasa Indonesia Bu Susanti", completed: false },
-  { id: "g_sat_english_project", title: "SAT English Project Continuous", category: "Project", priority: "High", startDate: "2026-08-08", deadline: "2026-08-16", time: "09:00", description: "Project SAT English berjalan setiap hari sampai 16 Agustus", completed: false },
-  { id: "g_nipro_its", title: "NIPRO ITS (Periode 2 Minggu)", category: "Lomba", priority: "High", startDate: "2026-08-17", deadline: "2026-08-31", time: "09:00", description: "Kompetisi NIPRO ITS berlangsung dari 17 Agustus s/d 31 Agustus 2026", completed: false },
-  { id: "g_gebyar_ulm", title: "Lomba Gebyar ULM", category: "Lomba", priority: "High", startDate: "2026-09-12", deadline: "2026-09-12", time: "08:00", description: "Pendaftaran & Pengumpulan Lomba Gebyar ULM 2026", completed: false },
-  { id: "g_math_challenge", title: "Lomba Mathematics Challenge", category: "Lomba", priority: "High", startDate: "2026-09-26", deadline: "2026-09-26", time: "08:00", description: "Babak Penyisihan & Puncak Mathematics Challenge 2026", completed: false },
-  { id: "g1", title: "Achieve IELTS Score 7.5", category: "Language", priority: "High", startDate: "2026-08-01", deadline: "2026-08-25", time: null, description: "Focus on writing and speaking sections. Practice every weekend.", completed: false },
-  { id: "g2", title: "Draft Motivation Letter for CMU", category: "Application", priority: "High", startDate: "2026-08-10", deadline: "2026-08-20", time: null, description: "", completed: false },
-  { id: "g3", title: "Save $500 for application fees", category: "Financial", priority: "Medium", startDate: null, deadline: null, time: null, description: "", completed: false },
-  { id: "g4", title: "Translate Academic Transcripts to English", category: "Application", priority: "Low", startDate: "2026-08-01", deadline: "2026-08-15", time: null, description: "", completed: true },
+  { 
+    id: "g_ai_challenge", 
+    title: "AI Challenge", 
+    category: "Lomba", 
+    priority: "High", 
+    startDate: null, 
+    deadline: "2026-09-16", 
+    time: "23:59", 
+    description: "SUKII LU", 
+    completed: false 
+  },
+  { 
+    id: "g_buat_akun", 
+    title: "BUAT AKUNNNN", 
+    category: "Application", 
+    priority: "High", 
+    startDate: null, 
+    deadline: "2026-09-13", 
+    time: "23:59", 
+    description: "UC, UOFT, UBC, DLL (HONGONKONGGG) taro 45 menit", 
+    completed: false 
+  },
+  { 
+    id: "g_niche_uc", 
+    title: "Cari jurusan Niche (UC)", 
+    category: "Tugas Sekolah", 
+    priority: "Medium", 
+    startDate: null, 
+    deadline: "2026-09-13", 
+    time: "23:59", 
+    description: "Riset jurusan niche untuk University of California", 
+    completed: false 
+  },
+  { 
+    id: "g_sb_video", 
+    title: "SB Video", 
+    category: "Tugas Sekolah", 
+    priority: "High", 
+    startDate: null, 
+    deadline: "2026-09-25", 
+    time: "23:59", 
+    description: "Tugas pembuatan SB Video", 
+    completed: false 
+  },
+  { 
+    id: "g_ijaio", 
+    title: "cicil IJAIO tiap hari", 
+    category: "Lomba", 
+    priority: "High", 
+    startDate: null, 
+    deadline: "2026-09-15", 
+    time: "23:59", 
+    description: "Persiapan dan pengerjaan IJAIO (Sudah Selesai)", 
+    completed: true 
+  }
+];
+
+export const WEEKLY_DRILLS_SEED: WeeklyDrillCategory[] = [
+  {
+    id: "reading",
+    title: "Reading Comprehension Drills",
+    priority: "High",
+    target: 10,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "45 mins",
+    description: "1 Session is 15 attempts of it & drill 7 questions"
+  },
+  {
+    id: "grammar",
+    title: "Grammar Drills",
+    priority: "Medium",
+    target: 7,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "30 mins",
+    description: "20 questions: 10 hard, 7 med, 3 easy"
+  },
+  {
+    id: "practice_test",
+    title: "SAT Practice Test",
+    priority: "High",
+    target: 3,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "1h 30m",
+    description: "Full practice test session (Monday, Wednesday, or Weekend)"
+  },
+  {
+    id: "math",
+    title: "Math Drills",
+    priority: "Low",
+    target: 5,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "30 mins",
+    description: "Focus on geometry, word problems, and functions (~150 mins/week)"
+  },
+  {
+    id: "evaluation",
+    title: "Evaluation on Practice Test",
+    priority: "High",
+    target: 3,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "45 mins",
+    description: "Redo wrong questions, analyze flaws and be mindful"
+  },
+  {
+    id: "timo",
+    title: "TIMO Preparation Drills",
+    priority: "High",
+    target: 10,
+    completed: 0,
+    unit: "sessions",
+    durationPerSession: "30 mins",
+    description: "Drill past year papers and competition guidelines"
+  }
 ];
 
 const getHeaders = () => {
@@ -384,51 +494,55 @@ const formatDate = (offsetDays: number) => {
 
 export const REMINDERS_SEED: any[] = [
   {
-    id: 101,
-    title: "Mau belajar SAT",
-    description: "Latihan Reading & Writing section (Barron 2026)",
+    id: 201,
+    title: "TIMO Preparation (Pagi)",
+    description: "Drill TIMO past years & guidelines (Morning session)",
+    date: formatDate(0),
+    startTime: "07:30",
+    endTime: "08:00",
+    durationHours: 0.5,
+    reminderMinutesBefore: 10,
+    isCompleted: false,
+    isNotified: false,
+    iconId: "general",
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 202,
+    title: "SAT Prep (Pagi)",
+    description: "General SAT Prep morning session",
     date: formatDate(0),
     startTime: "08:00",
-    durationHours: 2,
-    reminderMinutesBefore: 15,
+    endTime: "08:40",
+    durationHours: 0.67,
+    reminderMinutesBefore: 10,
     isCompleted: false,
     isNotified: false,
     iconId: "sat",
     createdAt: now.toISOString(),
   },
   {
-    id: 102,
-    title: "Draft Essay SOP CMU",
-    description: "Tulis short answer question #1",
+    id: 203,
+    title: "School Preparation",
+    description: "Making sure school things is fine",
     date: formatDate(0),
-    startTime: "14:00",
-    durationHours: 1.5,
-    reminderMinutesBefore: 15,
+    startTime: "08:40",
+    endTime: "09:00",
+    durationHours: 0.33,
+    reminderMinutesBefore: 5,
     isCompleted: false,
     isNotified: false,
-    iconId: "essay",
+    iconId: "general",
     createdAt: now.toISOString(),
   },
   {
-    id: 103,
-    title: "IELTS Practice Test",
-    description: "Listening section 4 & Speaking test",
-    date: formatDate(1),
-    startTime: "09:00",
-    durationHours: 2,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "sat",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 104,
-    title: "Review CV Editor",
-    description: "Update pengalaman organisasi & sertifikat",
-    date: formatDate(1),
-    startTime: "16:00",
-    durationHours: 1,
+    id: 204,
+    title: "TIMO Preparation (After School)",
+    description: "Afternoon TIMO drills (Monday - Friday)",
+    date: formatDate(0),
+    startTime: "15:10",
+    endTime: "15:40",
+    durationHours: 0.5,
     reminderMinutesBefore: 10,
     isCompleted: false,
     isNotified: false,
@@ -436,38 +550,13 @@ export const REMINDERS_SEED: any[] = [
     createdAt: now.toISOString(),
   },
   {
-    id: 105,
-    title: "Research Berkeley EECS",
-    description: "Cek syarat IELTS & deadline pendaftaran",
-    date: formatDate(2),
-    startTime: "10:00",
+    id: 205,
+    title: "SAT Prep (Night Main Session)",
+    description: "Main evening SAT Prep focus (~90 mins)",
+    date: formatDate(0),
+    startTime: "20:30",
+    endTime: "22:00",
     durationHours: 1.5,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "uni",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 106,
-    title: "Submit Recommendation Request",
-    description: "Kirim email rekomendasi ke guru PAI & BTA",
-    date: formatDate(3),
-    startTime: "13:00",
-    durationHours: 1,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "mail",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 107,
-    title: "Math SAT Drills",
-    description: "Kombinatorik & Fungsi Floor Ceiling",
-    date: formatDate(4),
-    startTime: "09:30",
-    durationHours: 2.5,
     reminderMinutesBefore: 15,
     isCompleted: false,
     isNotified: false,
@@ -475,55 +564,31 @@ export const REMINDERS_SEED: any[] = [
     createdAt: now.toISOString(),
   },
   {
-    id: 108,
-    title: "Rest & Exercise Break",
-    description: "Olahraga & Istirahat sore",
-    date: formatDate(5),
-    startTime: "16:00",
-    durationHours: 1,
-    reminderMinutesBefore: 10,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "fitness",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 109,
-    title: "Weekly Progress Review",
-    description: "Evaluasi target beasiswa 7 hari terakhir",
-    date: formatDate(6),
-    startTime: "19:00",
-    durationHours: 1,
-    reminderMinutesBefore: 15,
+    id: 206,
+    title: "Preparing for Mapel",
+    description: "Prep for unit test on ENGWA or PPKN",
+    date: formatDate(0),
+    startTime: "22:00",
+    endTime: "22:15",
+    durationHours: 0.25,
+    reminderMinutesBefore: 5,
     isCompleted: false,
     isNotified: false,
     iconId: "general",
     createdAt: now.toISOString(),
   },
   {
-    id: 110,
-    title: "SAT Subscription Active",
-    description: "Masa aktif paket & latihan SAT s/d 22 Agustus 2026",
-    date: "2026-08-22",
-    startTime: "09:00",
+    id: 207,
+    title: "SAT Practice Test (Mon/Wed/Weekend)",
+    description: "Full practice test session (Weekend 16:30 - 18:30 or Mon/Wed)",
+    date: formatDate(1),
+    startTime: "16:30",
+    endTime: "18:30",
     durationHours: 2,
     reminderMinutesBefore: 15,
     isCompleted: false,
     isNotified: false,
     iconId: "sat",
-    createdAt: now.toISOString(),
-  },
-  {
-    id: 111,
-    title: "NIPRO ITS Pembukaan (2 Minggu)",
-    description: "Kickoff & Pembukaan NIPRO ITS (17 Agustus - 31 Agustus 2026)",
-    date: "2026-08-17",
-    startTime: "10:00",
-    durationHours: 2,
-    reminderMinutesBefore: 15,
-    isCompleted: false,
-    isNotified: false,
-    iconId: "uni",
     createdAt: now.toISOString(),
   }
 ];
@@ -536,14 +601,23 @@ export async function saveReminders(reminders: any) {
   await saveToAPI("reminders", reminders);
 }
 
+export async function getWeeklyDrills(): Promise<WeeklyDrillCategory[]> {
+  return await fetchFromAPI("weekly_drills", WEEKLY_DRILLS_SEED);
+}
+
+export async function saveWeeklyDrills(drills: WeeklyDrillCategory[]) {
+  await saveToAPI("weekly_drills", drills);
+}
+
 export async function syncAllToCloud() {
-  const keys = ["universities", "goals", "cv", "documents", "reminders"];
+  const keys = ["universities", "goals", "cv", "documents", "reminders", "weekly_drills"];
   const seeds: Record<string, any> = {
     universities: UNIVERSITIES_SEED,
     goals: GOALS_SEED,
     cv: { personalInfo: { name: "", email: "", phone: "", address: "" }, education: [], certificates: [], skills: [], languages: [], experience: [] },
     documents: [],
     reminders: REMINDERS_SEED,
+    weekly_drills: WEEKLY_DRILLS_SEED,
   };
 
   let synced = 0;
@@ -559,6 +633,22 @@ export async function syncAllToCloud() {
 
 // Auto-sync immediately on load and when network is restored
 if (typeof window !== "undefined") {
+  // Auto-migrate to current routine & screenshot goals
+  const CURRENT_MIGRATION_VERSION = "v2026_09_sat_timo_goals_v5";
+  const applied = localStorage.getItem("beasiswa_migration_applied");
+  if (applied !== CURRENT_MIGRATION_VERSION) {
+    localStorage.setItem("beasiswa_goals", JSON.stringify(GOALS_SEED));
+    localStorage.setItem("beasiswa_goals_ts", Date.now().toString());
+    localStorage.setItem("beasiswa_reminders", JSON.stringify(REMINDERS_SEED));
+    localStorage.setItem("beasiswa_reminders_ts", Date.now().toString());
+    localStorage.setItem("beasiswa_weekly_drills", JSON.stringify(WEEKLY_DRILLS_SEED));
+    localStorage.setItem("beasiswa_weekly_drills_ts", Date.now().toString());
+    localStorage.setItem("beasiswa_migration_applied", CURRENT_MIGRATION_VERSION);
+    saveToAPI("goals", GOALS_SEED);
+    saveToAPI("reminders", REMINDERS_SEED);
+    saveToAPI("weekly_drills", WEEKLY_DRILLS_SEED);
+  }
+
   setTimeout(() => {
     if (navigator.onLine) {
       syncAllToCloud().catch(err => console.warn("[store] Auto-sync failed:", err));
@@ -575,7 +665,7 @@ if (typeof window !== "undefined") {
 
   // Auto-sync to Supabase before tab close using fetch keepalive
   window.addEventListener("beforeunload", () => {
-    const keys = ["universities", "goals", "cv", "documents", "reminders"];
+    const keys = ["universities", "goals", "cv", "documents", "reminders", "weekly_drills"];
     const token = localStorage.getItem("app_password") || "";
     for (const k of keys) {
       const localRaw = localStorage.getItem(`beasiswa_${k}`);
@@ -605,6 +695,7 @@ export async function restoreDefaultSeeds() {
     cv: { personalInfo: { name: "", email: "", phone: "", address: "" }, education: [], certificates: [], skills: [], languages: [], experience: [] },
     documents: [],
     reminders: REMINDERS_SEED,
+    weekly_drills: WEEKLY_DRILLS_SEED,
   };
 
   for (const k of Object.keys(seeds)) {
