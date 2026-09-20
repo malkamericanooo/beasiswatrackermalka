@@ -384,10 +384,11 @@ export default function Dashboard() {
           {/* Quick pills */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             {drills.map((d) => (
-              <div
+              <button
                 key={d.id}
+                type="button"
                 onClick={() => setLocation("/drills")}
-                className="p-2.5 rounded-lg border border-border/80 bg-card/80 hover:border-primary/50 cursor-pointer transition-all text-center space-y-1"
+                className="p-2.5 rounded-lg border border-border/80 bg-card/80 hover:border-primary/50 cursor-pointer transition-colors text-center space-y-1 block w-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <div className="text-[10px] text-muted-foreground truncate font-semibold">{d.title.replace(" Drills", "").replace(" Preparation", "")}</div>
                 <div className="text-xs font-mono font-bold text-foreground">
@@ -396,7 +397,7 @@ export default function Dashboard() {
                   </span>
                   /{d.target}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </CardContent>

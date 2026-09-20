@@ -68,8 +68,8 @@ export default function DrillTracker() {
     const changedItem = updated.find((d) => d.id === id);
     if (changedItem && changedItem.completed === changedItem.target) {
       toast({
-        title: "Target Selesai! 🎉",
-        description: `${changedItem.title} telah mencapai kuota mingguan (${changedItem.target}/${changedItem.target}). Mantap!`,
+        title: "Target Selesai",
+        description: `${changedItem.title} telah mencapai kuota mingguan (${changedItem.target}/${changedItem.target}).`,
       });
     }
   };
@@ -80,7 +80,7 @@ export default function DrillTracker() {
       setDrills(reset);
       await saveWeeklyDrills(reset);
       toast({
-        title: "Minggu Baru Dimulai! 🚀",
+        title: "Minggu Baru Dimulai",
         description: "Seluruh kuota drill SAT & TIMO telah di-reset ke 0.",
       });
     }
