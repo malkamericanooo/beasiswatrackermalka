@@ -793,7 +793,7 @@ export async function syncAllToCloud() {
 // Auto-sync immediately on load and when network is restored
 if (typeof window !== "undefined") {
   // Auto-migrate to current routine, 11 universities, screenshot goals, PTLN & Vocab drill
-  const CURRENT_MIGRATION_VERSION = "v2026_09_full_weekly_hardcoded_core_v10";
+  const CURRENT_MIGRATION_VERSION = "v2026_09_full_weekly_hardcoded_core_v11";
   const applied = localStorage.getItem("beasiswa_migration_applied");
   if (applied !== CURRENT_MIGRATION_VERSION) {
     localStorage.setItem("beasiswa_universities", JSON.stringify(UNIVERSITIES_SEED));

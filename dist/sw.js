@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beasiswa-tracker-v3';
+const CACHE_NAME = 'beasiswa-tracker-v5';
 const ASSETS = [
   '/',
   '/index.html',
@@ -68,18 +68,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets handling (Cache First -> Fallback to Network)
+  // Static assets & scripts handling (Network First -> Fallback to Cache)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
+        if (response.status === 200) {
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
-          return response;
-        })
-      );
-    })
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
