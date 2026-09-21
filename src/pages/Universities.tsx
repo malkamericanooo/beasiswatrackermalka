@@ -1,5 +1,17 @@
-import { useState, useEffect } from "react";
-import { Search, MoreHorizontal, CheckCircle2, Circle, ChevronRight, Plus, Pencil, Trash2, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, MoreHorizontal, CheckCircle2, Circle, ChevronRight, Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import {
+  columnVisibilityFeature,
+  createColumnHelper,
+  createSortedRowModel,
+  rowSortingFeature,
+  sortFn_alphanumeric,
+  sortFn_text,
+  tableFeatures,
+  useTable,
+  type ColumnVisibilityState,
+  type SortingState,
+} from "@tanstack/react-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +28,16 @@ import { cn } from "@/lib/utils";
 
 // A progression, not four unrelated things: only the terminal state
 // earns colour, so "done" is the one thing that pops in a long table.
+// Only the features this table uses are registered; the rest is tree-shaken.
+// Filtering stays with the existing Select controls rather than being moved
+// into the table, so the search + status + priority UI keeps working as-is.
+const tableFeaturesUsed = tableFeatures({
+  columnVisibilityFeature,
+  rowSortingFeature,
+  sortedRowModel: createSortedRowModel(),
+  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
+});
+
 const statusColors: Record<UniStatus, string> = {
   Researching: "chip chip-tag",
   Applying: "chip chip-idle",
@@ -629,6 +651,9 @@ export default function Universities() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [selected, setSelected] = useState<University | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  // Nearest deadline first: the default a deadline tracker should open on.
+  const [sorting, setSorting] = useState<SortingState>([{ id: "deadline", desc: false }]);
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
 
   useEffect(() => {
     getUniversities().then(data => setUniversities(data as University[]));
@@ -663,6 +688,48 @@ export default function Universities() {
     const matchStatus = statusFilter === "all" || u.status === statusFilter;
     const matchPriority = priorityFilter === "all" || u.priority === priorityFilter;
     return matchSearch && matchStatus && matchPriority;
+  });
+
+  // Deadline sorts on the parsed timestamp, not the formatted string, so
+  // "Dec 1, 2026" cannot sort before "Nov 30, 2026" alphabetically. Docs sort
+  // on completion ratio rather than the raw "1/8" label.
+  const columnHelper = useMemo(() => createColumnHelper<typeof tableFeaturesUsed, University>(), []);
+
+  const columns = useMemo(() => columnHelper.columns([
+    columnHelper.accessor((u) => u.name, {
+      id: "university",
+      header: "University & Program",
+      sortingFn: "text",
+    }),
+    columnHelper.accessor((u) => new Date(u.deadline).getTime(), {
+      id: "deadline",
+      header: "Deadline",
+      sortingFn: "alphanumeric",
+    }),
+    columnHelper.accessor(
+      (u) => (u.documents.length > 0 ? u.documents.filter((d) => d.completed).length / u.documents.length : -1),
+      { id: "docs", header: "Docs", sortingFn: "alphanumeric" },
+    ),
+    columnHelper.accessor((u) => STATUS_ORDER.indexOf(u.status), {
+      id: "status",
+      header: "Status",
+      sortingFn: "alphanumeric",
+    }),
+    columnHelper.accessor((u) => ({ High: 0, Medium: 1, Low: 2 }[u.priority] ?? 3), {
+      id: "priority",
+      header: "Priority",
+      sortingFn: "alphanumeric",
+    }),
+  ]), [columnHelper]);
+
+  const table = useTable({
+    features: tableFeaturesUsed,
+    data: filtered,
+    columns,
+    getRowId: (row) => row.id,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    state: { sorting, columnVisibility },
   });
 
   return (
@@ -723,17 +790,39 @@ export default function Universities() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">University & Program</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deadline</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Docs</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Priority</th>
-                  <th className="w-10" />
-                </tr>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b border-border">
+                    {hg.headers.map((header) => {
+                      const sorted = header.column.getIsSorted();
+                      return (
+                        <th
+                          key={header.id}
+                          className={cn("text-left py-3", header.column.id === "university" ? "px-5" : "px-4")}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => header.column.toggleSorting(sorted === "asc")}
+                            aria-label={`Sort by ${String(header.column.columnDef.header)}`}
+                            className="eyebrow inline-flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            {String(header.column.columnDef.header)}
+                            {sorted === "asc" ? (
+                              <ArrowUp className="size-3" />
+                            ) : sorted === "desc" ? (
+                              <ArrowDown className="size-3" />
+                            ) : (
+                              <ChevronsUpDown className="size-3 opacity-35" />
+                            )}
+                          </button>
+                        </th>
+                      );
+                    })}
+                    <th className="w-10" />
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {filtered.length === 0 && (
+                {table.getRowModel().rows.length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center py-10 text-muted-foreground text-sm">
                       No universities found.{" "}
@@ -741,7 +830,8 @@ export default function Universities() {
                     </td>
                   </tr>
                 )}
-                {filtered.map((u) => {
+                {table.getRowModel().rows.map((row) => {
+                  const u = row.original;
                   const done = u.documents.filter((d) => d.completed).length;
                   const total = u.documents.length;
                   const days = getDaysLeft(u.deadline);

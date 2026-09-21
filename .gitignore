@@ -1,3 +1,8 @@
 node_modules/
 local_db.json
 .claude/
+
+# graphify: keep the queryable graph, drop regenerable bulk
+graphify-out/cache/
+graphify-out/graph.html
+graphify-out/.graphify_*
