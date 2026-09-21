@@ -32,10 +32,14 @@ interface CVPreviewProps {
 function CVPreview({ cv }: CVPreviewProps) {
   const { personalInfo: p, education, certificates, skills, languages, experience } = cv;
   return (
-    <div id="cv-preview" className="font-serif text-[13px] leading-relaxed text-gray-900 bg-white p-8 min-h-[800px]">
+    <div
+      id="cv-preview"
+      style={{ fontFamily: "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" }}
+      className="text-xs leading-relaxed text-black bg-white p-8 min-h-[800px]"
+    >
       {/* Header */}
       <div className="text-center mb-5 pb-4 border-b-2 border-gray-900">
-        <h1 className="text-2xl font-bold uppercase tracking-widest">{p.name || "Your Name"}</h1>
+        <h1 className="text-2xl font-semibold uppercase tracking-widest">{p.name || "Your Name"}</h1>
         <div className="flex flex-wrap justify-center gap-3 mt-1.5 text-xs text-gray-600">
           {p.email && <span>{p.email}</span>}
           {p.phone && <span>{p.phone}</span>}
@@ -46,11 +50,11 @@ function CVPreview({ cv }: CVPreviewProps) {
       {/* Education */}
       {education.length > 0 && (
         <div className="mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Education</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Education</h2>
           {education.map(e => (
             <div key={e.id} className="mb-2">
               <div className="flex justify-between">
-                <span className="font-bold">{e.school}</span>
+                <span className="font-semibold">{e.school}</span>
                 <span className="text-gray-600 text-xs">{e.startYear}{e.endYear ? ` – ${e.endYear}` : " – Present"}</span>
               </div>
               <div className="text-gray-700">{e.degree}{e.field ? `, ${e.field}` : ""}</div>
@@ -62,11 +66,11 @@ function CVPreview({ cv }: CVPreviewProps) {
       {/* Experience */}
       {experience.length > 0 && (
         <div className="mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Experience</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Experience</h2>
           {experience.map(e => (
             <div key={e.id} className="mb-2">
               <div className="flex justify-between">
-                <span className="font-bold">{e.title}</span>
+                <span className="font-semibold">{e.title}</span>
                 <span className="text-gray-600 text-xs">{e.startDate}{e.endDate ? ` – ${e.endDate}` : " – Present"}</span>
               </div>
               <div className="text-gray-700 italic">{e.organization}</div>
@@ -79,11 +83,11 @@ function CVPreview({ cv }: CVPreviewProps) {
       {/* Certifications */}
       {certificates.length > 0 && (
         <div className="mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Certifications & Achievements</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Certifications & Achievements</h2>
           {certificates.map(c => (
             <div key={c.id} className="mb-2">
               <div className="flex justify-between">
-                <span className="font-bold">{c.title}</span>
+                <span className="font-semibold">{c.title}</span>
                 <span className="text-gray-600 text-xs">{c.date}</span>
               </div>
               <div className="text-gray-700 italic">{c.issuer}</div>
@@ -96,7 +100,7 @@ function CVPreview({ cv }: CVPreviewProps) {
       {/* Skills */}
       {skills.length > 0 && (
         <div className="mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Skills</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Skills</h2>
           <p className="text-gray-700">{skills.join(" • ")}</p>
         </div>
       )}
@@ -104,7 +108,7 @@ function CVPreview({ cv }: CVPreviewProps) {
       {/* Languages */}
       {languages.length > 0 && (
         <div className="mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Languages</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest border-b border-gray-400 pb-0.5 mb-2">Languages</h2>
           <div className="flex flex-wrap gap-4">
             {languages.map(l => (
               <span key={l.id} className="text-gray-700">
@@ -249,7 +253,7 @@ export default function CVEditor() {
     <div className="p-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">CV Editor</h1>
+          <h1 className="text-2xl text-foreground mb-1">CV Editor</h1>
           <p className="text-muted-foreground text-sm">Build and auto-generate your CV from your certificates and experience.</p>
         </div>
         <Button onClick={handlePrint} variant="outline" data-testid="btn-print-cv">
@@ -302,7 +306,7 @@ export default function CVEditor() {
                   onDragLeave={() => setDragOverEduIdx(null)}
                   onDrop={() => { if (draggedEduIdx !== null) reorderEducation(draggedEduIdx, i); setDraggedEduIdx(null); setDragOverEduIdx(null); }}
                   onDragEnd={() => { setDraggedEduIdx(null); setDragOverEduIdx(null); }}
-                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                  className={`border rounded-sm p-3 mb-3 last:mb-0 transition-all ${
                     draggedEduIdx === i ? "opacity-50 border-primary" :
                     dragOverEduIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
                     "border-border"
@@ -369,7 +373,7 @@ export default function CVEditor() {
                   onDragLeave={() => setDragOverCertIdx(null)}
                   onDrop={() => { if (draggedCertIdx !== null) reorderCertificates(draggedCertIdx, i); setDraggedCertIdx(null); setDragOverCertIdx(null); }}
                   onDragEnd={() => { setDraggedCertIdx(null); setDragOverCertIdx(null); }}
-                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                  className={`border rounded-sm p-3 mb-3 last:mb-0 transition-all ${
                     draggedCertIdx === i ? "opacity-50 border-primary" :
                     dragOverCertIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
                     "border-border"
@@ -432,7 +436,7 @@ export default function CVEditor() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {cv.skills.map(s => (
-                  <div key={s} className="flex items-center gap-1 bg-muted text-sm px-2 py-0.5 rounded-md">
+                  <div key={s} className="flex items-center gap-1 bg-muted text-sm px-2 py-0.5 rounded-sm">
                     {s}
                     <button onClick={() => removeSkill(s)} data-testid={`btn-remove-skill-${s}`} className="text-muted-foreground hover:text-foreground">
                       <span className="text-xs">×</span>
@@ -478,7 +482,7 @@ export default function CVEditor() {
                   onDragLeave={() => setDragOverExpIdx(null)}
                   onDrop={() => { if (draggedExpIdx !== null) reorderExperience(draggedExpIdx, i); setDraggedExpIdx(null); setDragOverExpIdx(null); }}
                   onDragEnd={() => { setDraggedExpIdx(null); setDragOverExpIdx(null); }}
-                  className={`border rounded-md p-3 mb-3 last:mb-0 transition-all ${
+                  className={`border rounded-sm p-3 mb-3 last:mb-0 transition-all ${
                     draggedExpIdx === i ? "opacity-50 border-primary" :
                     dragOverExpIdx === i ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
                     "border-border"

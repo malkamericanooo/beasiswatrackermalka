@@ -14,23 +14,26 @@ import { getDaysLeft } from "@/lib/scoring";
 import type { University, UniStatus, Priority, DocCategory, UniversityDocument } from "@/types";
 import { cn } from "@/lib/utils";
 
+// A progression, not four unrelated things: only the terminal state
+// earns colour, so "done" is the one thing that pops in a long table.
 const statusColors: Record<UniStatus, string> = {
-  Researching: "bg-sky-100 text-sky-700 border-sky-200",
-  Applying: "bg-amber-100 text-amber-700 border-amber-200",
-  Applied: "bg-violet-100 text-violet-700 border-violet-200",
-  Submitted: "bg-green-100 text-green-700 border-green-200",
+  Researching: "chip chip-tag",
+  Applying: "chip chip-idle",
+  Applied: "chip chip-idle",
+  Submitted: "chip chip-ok",
 };
 
 const priorityColors: Record<Priority, string> = {
-  High: "bg-rose-100 text-rose-700 border-rose-200",
-  Medium: "bg-amber-100 text-amber-700 border-amber-200",
-  Low: "bg-slate-100 text-slate-600 border-slate-200",
+  High: "rank rank-high",
+  Medium: "rank rank-medium",
+  Low: "rank rank-low",
 };
 
+// Nominal — the label already says which it is.
 const categoryColors: Record<DocCategory, string> = {
-  Academic: "bg-green-100 text-green-700 border-green-200",
-  Document: "bg-rose-100 text-rose-700 border-rose-200",
-  Language: "bg-amber-100 text-amber-700 border-amber-200",
+  Academic: "chip chip-tag",
+  Document: "chip chip-tag",
+  Language: "chip chip-tag",
 };
 
 const STATUS_ORDER: UniStatus[] = ["Researching", "Applying", "Applied", "Submitted"];
@@ -207,7 +210,7 @@ function AddUniversityDialog({ open, onClose, onAdd }: AddDialogProps) {
               {docs.map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 text-sm px-2 py-1 rounded bg-muted/50">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Badge variant="outline" className={cn("text-xs shrink-0", categoryColors[d.category])}>{d.category}</Badge>
+                    <span className={cn(categoryColors[d.category], "shrink-0")}>{d.category}</span>
                     <span className="truncate">{d.name}</span>
                   </div>
                   <button onClick={() => removeDoc(d.id)} className="text-muted-foreground hover:text-destructive shrink-0">
@@ -373,7 +376,7 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
                   onClick={() => setEditMode(true)}
                   data-testid="btn-edit-uni"
                   title="Edit"
-                  className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  className="p-1.5 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
@@ -382,7 +385,7 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
                 onClick={handleDelete}
                 data-testid="btn-delete-uni"
                 title="Delete university"
-                className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+                className="p-1.5 rounded-sm hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -410,8 +413,8 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
             </div>
           ) : (
             <div className="flex gap-2 mt-2">
-              <Badge variant="outline" className={statusColors[university.status]}>{university.status}</Badge>
-              <Badge variant="outline" className={priorityColors[university.priority]}>{university.priority} Priority</Badge>
+              <span className={statusColors[university.status]}>{university.status}</span>
+              <span className={priorityColors[university.priority]}>{university.priority} priority</span>
               <span className="text-xs text-muted-foreground self-center">{university.country} &bull; {university.language}</span>
             </div>
           )}
@@ -513,9 +516,9 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
             <div className="flex items-center gap-2">
               <span className="text-base font-medium">{formatFee(university.registrationFee)}</span>
               {university.registrationFee.source === "agent-estimated" ? (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs" data-testid="badge-agent-estimated">Agent est.</Badge>
+                <Badge variant="outline" className="bg-soon-wash text-soon border-soon-edge text-xs" data-testid="badge-agent-estimated">Agent est.</Badge>
               ) : (
-                <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-xs" data-testid="badge-verified">Verified</Badge>
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs" data-testid="badge-verified">Verified</Badge>
               )}
             </div>
           )}
@@ -535,7 +538,7 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
             return (
               <div key={cat} className="mb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Badge variant="outline" className={cn("text-xs", categoryColors[cat])}>{cat}</Badge>
+                  <span className={categoryColors[cat]}>{cat}</span>
                 </div>
                 <div className="space-y-1">
                   {docs.map((doc) => (
@@ -543,10 +546,10 @@ function UniversityDetail({ university, open, onClose, onUpdate, onDelete }: Det
                       <button
                         data-testid={`doc-toggle-${doc.id}`}
                         onClick={() => editMode ? toggleDraftDoc(doc.id) : toggleDoc(doc.id)}
-                        className="flex items-center gap-2.5 flex-1 text-left p-2 rounded-md hover:bg-muted transition-colors"
+                        className="flex items-center gap-2.5 flex-1 text-left p-2 rounded-sm hover:bg-muted transition-colors"
                       >
                         {doc.completed ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-ok shrink-0" />
                         ) : (
                           <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
                         )}
@@ -666,7 +669,7 @@ export default function Universities() {
     <div className="p-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Universities</h1>
+          <h1 className="text-2xl text-foreground mb-1">Universities</h1>
           <p className="text-muted-foreground text-sm">Manage your applications and research.</p>
         </div>
         <Button onClick={() => setAddOpen(true)} data-testid="btn-add-university">
@@ -756,7 +759,7 @@ export default function Universities() {
                       <td className="px-4 py-3.5">
                         <div className="text-sm text-foreground">{formatDate(u.deadline)}</div>
                         {days !== null && days >= 0 && (
-                          <div className={cn("text-xs mt-0.5", days <= 30 ? "text-amber-600" : "text-muted-foreground")}>
+                          <div className={cn("text-xs mt-0.5", days <= 30 ? "text-soon" : "text-muted-foreground")}>
                             {days === 0 ? "Today" : `${days}d left`}
                           </div>
                         )}
@@ -768,10 +771,10 @@ export default function Universities() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <Badge variant="outline" className={statusColors[u.status]}>{u.status}</Badge>
+                        <span className={statusColors[u.status]}>{u.status}</span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <Badge variant="outline" className={priorityColors[u.priority]}>{u.priority}</Badge>
+                        <span className={priorityColors[u.priority]}>{u.priority}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />

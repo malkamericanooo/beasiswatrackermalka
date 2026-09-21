@@ -120,31 +120,31 @@ export default function DesktopWidget() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 font-sans select-none overflow-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-sidebar text-sidebar-foreground p-4 font-sans select-none overflow-hidden flex flex-col justify-between">
       {/* Widget Header */}
       <div>
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+        <div className="flex items-center justify-between border-b border-sidebar-border pb-3 mb-3">
           <div className="flex items-center gap-2.5">
             <img src="/uoft-crest-clean.png" alt="UofT Crest" className="w-7 h-7 object-contain bg-white/90 p-0.5 rounded shadow-xs" />
             <div>
-              <h1 className="text-xs font-bold font-serif tracking-wider uppercase text-slate-100 flex items-center gap-1.5">
+              <h1 className="eyebrow text-sidebar-foreground flex items-center gap-1.5">
                 Top 8 Urgency Widget
               </h1>
-              <p className="text-[10px] text-slate-400 font-mono">Sorted by closest deadline</p>
+              <p className="text-2xs text-sidebar-foreground/55 font-mono">Sorted by closest deadline</p>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
             <button
               onClick={loadTop8}
-              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1 rounded hover:bg-sidebar-accent text-sidebar-foreground/55 hover:text-sidebar-foreground transition-colors"
               title="Refresh"
             >
               <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
             </button>
             <button
               onClick={popoutWidget}
-              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1 rounded hover:bg-sidebar-accent text-sidebar-foreground/55 hover:text-sidebar-foreground transition-colors"
               title="Popout Floating Window"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -155,7 +155,7 @@ export default function DesktopWidget() {
         {/* Top 8 Items List */}
         <div className="space-y-2">
           {items.length === 0 ? (
-            <div className="text-center py-10 text-slate-500 text-xs font-mono">
+            <div className="text-center py-10 text-sidebar-foreground/55 text-xs font-mono">
               No active tasks or deadlines! 🎉
             </div>
           ) : (
@@ -167,38 +167,38 @@ export default function DesktopWidget() {
                 <div
                   key={item.id}
                   className={cn(
-                    "p-2.5 rounded-lg border transition-all flex items-center justify-between gap-2.5 bg-slate-900/90 shadow-2xs hover:border-slate-700",
-                    isDueToday ? "border-rose-500/50 bg-rose-950/20" : isOverdue ? "border-amber-500/40" : "border-slate-800/80"
+                    "p-2.5 rounded-lg border transition-all flex items-center justify-between gap-2.5 bg-sidebar/90 shadow-xs hover:border-sidebar-border",
+                    isDueToday ? "border-urgent/50 bg-urgent/10" : isOverdue ? "border-soon/40" : "border-sidebar-border/80"
                   )}
                 >
                   {/* Left: Complete Checkbox & Title */}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <button
                       onClick={() => toggleComplete(item)}
-                      className="text-slate-500 hover:text-emerald-400 transition-colors shrink-0"
+                      className="text-sidebar-foreground/55 hover:text-ok transition-colors shrink-0"
                     >
                       {item.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <CheckCircle2 className="w-4 h-4 text-ok" />
                       ) : (
                         <Circle className="w-4 h-4" />
                       )}
                     </button>
 
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-100 truncate leading-snug">
+                      <p className="text-xs font-semibold text-sidebar-foreground truncate leading-snug">
                         {item.title}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge variant="outline" className={cn("text-[9px] py-0 px-1 font-bold border-none",
-                          item.category === "Lomba" ? "bg-emerald-500/20 text-emerald-300" :
-                          item.category === "Tugas Sekolah" ? "bg-indigo-500/20 text-indigo-300" :
-                          item.category === "Project" ? "bg-amber-500/20 text-amber-300" :
-                          item.category === "Scholarship" ? "bg-rose-500/20 text-rose-300" :
-                          "bg-purple-500/20 text-purple-300"
+                        <Badge variant="outline" className={cn("text-2xs py-0 px-1 font-semibold border-none",
+                          item.category === "Lomba" ? "bg-ok/20 text-ok" :
+                          item.category === "Tugas Sekolah" ? "bg-white/10 text-muted-foreground" :
+                          item.category === "Project" ? "bg-soon/20 text-soon" :
+                          item.category === "Scholarship" ? "bg-urgent/20 text-urgent" :
+                          "bg-white/10 text-muted-foreground"
                         )}>
                           {item.category}
                         </Badge>
-                        <span className="text-[9px] font-mono text-slate-500">{item.deadlineStr}</span>
+                        <span className="text-2xs font-mono text-sidebar-foreground/55">{item.deadlineStr}</span>
                       </div>
                     </div>
                   </div>
@@ -208,14 +208,14 @@ export default function DesktopWidget() {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border",
+                        "text-2xs font-mono font-semibold px-2 py-0.5 rounded-full border",
                         isOverdue
-                          ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                          ? "bg-urgent/20 text-urgent border-urgent/40"
                           : isDueToday
-                          ? "bg-rose-600 text-white font-extrabold animate-pulse border-rose-400"
+                          ? "bg-urgent text-white font-medium border-urgent"
                           : item.daysLeft !== null && item.daysLeft <= 3
-                          ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                          : "bg-slate-800 text-slate-300 border-slate-700"
+                          ? "bg-soon/20 text-soon border-soon/40"
+                          : "bg-sidebar-accent text-sidebar-foreground/75 border-sidebar-border"
                       )}
                     >
                       {isOverdue
@@ -233,9 +233,9 @@ export default function DesktopWidget() {
       </div>
 
       {/* Widget Footer */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+      <div className="pt-3 border-t border-sidebar-border/80 flex items-center justify-between text-2xs text-sidebar-foreground/55 font-mono">
         <span>UofT Target 2026</span>
-        <button onClick={popoutWidget} className="hover:text-slate-300 transition-colors underline">
+        <button onClick={popoutWidget} className="hover:text-sidebar-foreground/75 transition-colors underline">
           Open Desktop Popout Window
         </button>
       </div>

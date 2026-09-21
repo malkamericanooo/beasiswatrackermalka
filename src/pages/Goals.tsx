@@ -15,9 +15,9 @@ import type { Goal, Priority } from "@/types";
 import { cn } from "@/lib/utils";
 
 const priorityColors: Record<Priority, string> = {
-  High: "bg-rose-100 text-rose-700 border-rose-200",
-  Medium: "bg-amber-100 text-amber-700 border-amber-200",
-  Low: "bg-slate-100 text-slate-600 border-slate-200",
+  High: "rank rank-high",
+  Medium: "rank rank-medium",
+  Low: "rank rank-low",
 };
 
 const CATEGORIES = ["Tugas Sekolah", "Lomba", "Project", "Application", "Language", "Financial", "Other"];
@@ -27,14 +27,9 @@ function formatDeadline(d: string | null) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function getCategoryBadgeStyle(cat: string) {
-  const c = cat.toLowerCase();
-  if (c.includes("lomba") || c.includes("competition")) return "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200";
-  if (c.includes("tugas") || c.includes("school")) return "bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-200";
-  if (c.includes("project") || c.includes("projek")) return "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-200";
-  if (c.includes("application") || c.includes("scholarship")) return "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-200";
-  if (c.includes("language")) return "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950 dark:text-sky-200";
-  return "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-200";
+// Category is nominal: six hues told you nothing the label did not.
+function getCategoryBadgeStyle(_cat: string) {
+  return "chip chip-tag";
 }
 
 interface GoalFormProps {
@@ -145,12 +140,12 @@ function GoalCard({ goal, onToggle, onEdit, onDelete, onChangePriority }: GoalCa
   const isOverdue = days !== null && days < 0;
 
   return (
-    <Card data-testid={`goal-card-${goal.id}`} className={cn("transition-opacity border border-border/80 shadow-2xs", goal.completed && "opacity-60")}>
+    <Card data-testid={`goal-card-${goal.id}`} className={cn("transition-opacity border border-border/80 shadow-xs", goal.completed && "opacity-60")}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <Badge variant="outline" className={cn("text-xs font-semibold", getCategoryBadgeStyle(goal.category))}>
+          <span className={getCategoryBadgeStyle(goal.category)}>
             {goal.category}
-          </Badge>
+          </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button data-testid={`btn-goal-menu-${goal.id}`} className="p-0.5 rounded hover:bg-muted transition-colors">
@@ -177,32 +172,32 @@ function GoalCard({ goal, onToggle, onEdit, onDelete, onChangePriority }: GoalCa
           </DropdownMenu>
         </div>
 
-        <h3 className={cn("font-bold text-foreground text-sm mb-1 leading-snug", goal.completed && "line-through text-muted-foreground")}>
+        <h3 className={cn("font-semibold text-foreground text-sm mb-1 leading-snug", goal.completed && "line-through text-muted-foreground")}>
           {goal.title}
         </h3>
 
         {goal.description && (
-          <p className="text-xs text-muted-foreground mb-3 leading-relaxed line-clamp-2 bg-muted/30 p-2 rounded border border-border/50">
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed line-clamp-2">
             {goal.description}
           </p>
         )}
 
         <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={cn("text-[10px] font-semibold", priorityColors[goal.priority])}>
+            <span className={priorityColors[goal.priority]}>
               {goal.priority}
-            </Badge>
+            </span>
 
             {goal.time && (
-              <span className="text-[10px] font-mono font-semibold text-muted-foreground flex items-center gap-1">
+              <span className="text-2xs font-mono font-semibold text-muted-foreground flex items-center gap-1">
                 <Clock className="w-3 h-3 text-primary" /> {goal.time}
               </span>
             )}
 
             {goal.deadline && (
-              <div className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+              <div className="flex items-center gap-1 text-2xs font-mono text-muted-foreground">
                 <CalendarIcon className="w-3 h-3" />
-                <span className={cn(isOverdue && "text-rose-600 font-bold")}>
+                <span className={cn(isOverdue && "text-urgent font-medium")}>
                   {isOverdue ? `${Math.abs(days!)}d overdue` : days === 0 ? "Due today" : formatDeadline(goal.deadline)}
                 </span>
               </div>
@@ -216,7 +211,7 @@ function GoalCard({ goal, onToggle, onEdit, onDelete, onChangePriority }: GoalCa
             title={goal.completed ? "Mark uncompleted" : "Mark completed"}
           >
             {goal.completed ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <CheckCircle2 className="w-5 h-5 text-ok" />
             ) : (
               <Circle className="w-5 h-5 text-muted-foreground" />
             )}
@@ -271,7 +266,9 @@ export default function Goals() {
 
   const activeGoals = filtered.filter(g => !g.completed);
   const mostUrgent = sortByComposite(activeGoals).slice(0, 3);
-  const highPriority = sortByPriorityThenDeadline(activeGoals.filter(g => !mostUrgent.find(m => m.id === g.id))).slice(0, 6);
+  // The remainder, not a preview: this list now renders every active goal
+  // that is not already shown under "Needs attention", so nothing is hidden.
+  const highPriority = sortByPriorityThenDeadline(activeGoals.filter(g => !mostUrgent.find(m => m.id === g.id)));
   const completed = filtered.filter(g => g.completed);
 
   const categories = [...new Set(["Tugas Sekolah", "Lomba", "Project", "Application", "Language", ...goals.map(g => g.category)])];
@@ -280,7 +277,7 @@ export default function Goals() {
     <div className="p-4 md:p-8">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Goals & Tasks</h1>
+          <h1 className="text-2xl text-foreground mb-1">Goals &amp; Tasks</h1>
           <p className="text-muted-foreground text-sm">Keep track of your preparation milestones, school tasks, and competitions.</p>
         </div>
         <Button onClick={() => setAddOpen(true)} data-testid="btn-add-goal" className="self-start sm:self-auto">
@@ -318,7 +315,7 @@ export default function Goals() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active font-semibold">Active</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="all">All</SelectItem>
             </SelectContent>
@@ -337,9 +334,7 @@ export default function Goals() {
         <div className="space-y-8">
           {mostUrgent.length > 0 && statusFilter !== "completed" && (
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3 flex items-center gap-1.5">
-                Urgent Milestones
-              </h2>
+              <h2 className="eyebrow text-urgent mb-3">Needs attention</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mostUrgent.map(g => (
                   <GoalCard
@@ -357,11 +352,9 @@ export default function Goals() {
 
           {highPriority.length > 0 && statusFilter !== "completed" && (
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                All Active Targets ({activeGoals.length})
-              </h2>
+              <h2 className="eyebrow mb-3">Other active targets ({highPriority.length})</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeGoals.map(g => (
+                {highPriority.map(g => (
                   <GoalCard
                     key={g.id}
                     goal={g}
@@ -377,7 +370,7 @@ export default function Goals() {
 
           {completed.length > 0 && statusFilter !== "active" && (
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+              <h2 className="eyebrow mb-3">
                 Completed ({completed.length})
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -181,9 +181,14 @@ export default function Dashboard() {
     }
   });
 
+  // Daily routine is stored as one dated row per day (161 rows over 25 days
+  // for six repeating titles), so every day you do not tick it leaves another
+  // permanent "overdue" entry. A missed habit on Thursday is not a deadline
+  // that passed — surfacing it as one buries the scholarship deadlines that
+  // genuinely are. Agenda rows therefore only appear from today forward.
   reminders.forEach((r) => {
     const days = getDaysLeft(r.date);
-    if (days !== null && days <= 3) {
+    if (days !== null && days >= 0 && days <= 3) {
       items3Days.push({
         title: r.title,
         category: "Agenda",
@@ -210,8 +215,17 @@ export default function Dashboard() {
     }
   });
 
-  items3Days.sort((a, b) => a.daysLeft - b.daysLeft);
+  // Open work first, then by how overdue. Recurring daily agendas can pile
+  // up into dozens of overdue rows, so the panel shows a readable slice and
+  // says how many it is holding back.
+  items3Days.sort((a, b) => {
+    if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+    return a.daysLeft - b.daysLeft;
+  });
   const openToday = items3Days.filter((i) => !i.completed).length;
+  const FOCUS_LIMIT = 8;
+  const focusItems = items3Days.slice(0, FOCUS_LIMIT);
+  const focusHidden = items3Days.length - focusItems.length;
 
   const handleToggleGoal = async (g: Goal) => {
     const updated = goals.map((x) => (String(x.id) === String(g.id) ? { ...x, completed: !x.completed } : x));
@@ -292,7 +306,7 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            items3Days.map((item, idx) => {
+            focusItems.map((item, idx) => {
               const u = urgencyOf(item.daysLeft);
               const toggle = item.raw
                 ? () => handleToggleGoal(item.raw!)
@@ -352,7 +366,18 @@ export default function Dashboard() {
 
         {items3Days.length > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
-            {openToday} of {items3Days.length} still open.
+            {openToday} of {items3Days.length} still open
+            {focusHidden > 0 && (
+              <>
+                {" · "}
+                <Link href="/calendar">
+                  <span className="underline underline-offset-2 decoration-border hover:decoration-foreground cursor-pointer">
+                    {focusHidden} more not shown
+                  </span>
+                </Link>
+              </>
+            )}
+            .
           </p>
         )}
       </section>
@@ -456,7 +481,7 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border rounded-sm overflow-hidden">
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             {drills.map((d) => {
               const hit = d.completed >= d.target;
               return (
@@ -464,7 +489,7 @@ export default function Dashboard() {
                   key={d.id}
                   type="button"
                   onClick={() => setLocation("/drills")}
-                  className="bg-card hover:bg-accent/50 transition-colors px-3 py-2.5 text-left cursor-pointer"
+                  className="rounded-sm border border-border bg-card hover:bg-accent/50 hover:border-foreground/25 transition-colors px-3 py-2 text-left cursor-pointer"
                 >
                   <span className="block text-xs text-muted-foreground truncate">
                     {d.title.replace(" Drills", "").replace(" Preparation", "")}

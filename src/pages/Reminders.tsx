@@ -18,13 +18,13 @@ import { getReminders, saveReminders } from "@/store/data";
 import { ReminderItem } from "@/types";
 
 const CATEGORY_ICONS = [
-  { id: "sat", label: "SAT Study", icon: BookOpen, color: "text-amber-500 bg-amber-500/10 border-amber-200" },
-  { id: "essay", label: "Essay Writing", icon: FileEdit, color: "text-purple-500 bg-purple-500/10 border-purple-200" },
-  { id: "uni", label: "Uni Research", icon: GraduationCap, color: "text-blue-500 bg-blue-500/10 border-blue-200" },
-  { id: "mail", label: "Email / Submit", icon: Send, color: "text-emerald-500 bg-emerald-500/10 border-emerald-200" },
-  { id: "fitness", label: "Exercise", icon: Dumbbell, color: "text-orange-500 bg-orange-500/10 border-orange-200" },
-  { id: "rest", label: "Rest / Break", icon: Coffee, color: "text-rose-500 bg-rose-500/10 border-rose-200" },
-  { id: "general", label: "Task / Goal", icon: AlarmClock, color: "text-indigo-500 bg-indigo-500/10 border-indigo-200" },
+  { id: "sat", label: "SAT Study", icon: BookOpen, color: "text-soon bg-soon/10 border-soon-edge" },
+  { id: "essay", label: "Essay Writing", icon: FileEdit, color: "text-muted-foreground bg-muted border-border" },
+  { id: "uni", label: "Uni Research", icon: GraduationCap, color: "text-muted-foreground bg-muted border-border" },
+  { id: "mail", label: "Email / Submit", icon: Send, color: "text-ok bg-ok/10 border-ok-edge" },
+  { id: "fitness", label: "Exercise", icon: Dumbbell, color: "text-soon bg-soon-wash border-soon-edge" },
+  { id: "rest", label: "Rest / Break", icon: Coffee, color: "text-urgent bg-urgent/10 border-urgent-edge" },
+  { id: "general", label: "Task / Goal", icon: AlarmClock, color: "text-muted-foreground bg-muted border-border" },
 ];
 
 function pickCategoryIcon(iconId?: string, title: string = "") {
@@ -281,10 +281,10 @@ export default function Reminders() {
         <div className="border-b bg-card px-3 md:px-5 py-3 shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="font-serif font-bold text-lg md:text-xl text-foreground">
+              <span className="text-lg font-medium text-foreground">
                 {format(weekStart, "MMMM")}
               </span>
-              <span className="font-serif font-bold text-lg md:text-xl text-primary">
+              <span className="text-lg font-mono text-muted-foreground">
                 {format(weekStart, "yyyy")}
               </span>
             </div>
@@ -323,10 +323,10 @@ export default function Reminders() {
                         : "hover:bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <span className="text-[10px] uppercase tracking-wider font-medium mb-0.5">
+                  <span className="text-2xs uppercase tracking-wider font-medium mb-0.5">
                     {format(day, "EEE")}
                   </span>
-                  <span className={`text-sm md:text-base font-bold leading-none ${isTdy && !isSel ? "text-primary" : ""}`}>
+                  <span className={`text-sm md:text-base font-semibold leading-none ${isTdy && !isSel ? "text-primary" : ""}`}>
                     {format(day, "d")}
                   </span>
                   {hasItems && (
@@ -388,7 +388,7 @@ export default function Reminders() {
                             )}
                             <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-sm ring-2 shrink-0 z-10 ${
                               rem.isCompleted
-                                ? "bg-slate-800 ring-slate-700 text-slate-300"
+                                ? "bg-sidebar-accent ring-sidebar-ring text-sidebar-foreground/75"
                                 : `${iconConfig.color} ring-primary/20`
                             }`}>
                               <CategoryIcon className="w-4 h-4" />
@@ -398,31 +398,31 @@ export default function Reminders() {
                           {/* Card */}
                           <div
                             onClick={() => openDialog(undefined, undefined, rem)}
-                            className={`flex-1 mb-2 rounded-xl border px-3 md:px-4 py-3 transition-all cursor-pointer ${
+                            className={`flex-1 mb-2 rounded-lg border px-3 md:px-4 py-3 transition-all cursor-pointer ${
                               rem.isCompleted
-                                ? "bg-slate-900 text-white border-slate-800 opacity-90 shadow-sm"
-                                : "bg-card border-border shadow-sm hover:border-primary/40 hover:shadow-md"
+                                ? "bg-sidebar text-white border-sidebar-border opacity-90 shadow-sm"
+                                : "bg-card border-border shadow-sm hover:border-primary/40 hover:shadow-sm"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${
-                                    rem.isCompleted ? "bg-slate-800 text-slate-300" : "bg-muted text-muted-foreground"
+                                  <span className={`text-2xs font-mono px-2 py-0.5 rounded-sm ${
+                                    rem.isCompleted ? "bg-sidebar-accent text-sidebar-foreground/75" : "bg-muted text-muted-foreground"
                                   }`}>
                                     {rem.startTime?.slice(0, 5)} · {rem.durationHours} jam
                                   </span>
                                   {rem.iconId && (
-                                    <span className="text-[10px] font-medium text-primary/80">
+                                    <span className="text-2xs font-medium text-primary/80">
                                       {iconConfig.label}
                                     </span>
                                   )}
                                 </div>
-                                <p className={`font-semibold text-sm leading-tight ${rem.isCompleted ? "line-through text-slate-300" : "text-foreground"}`}>
+                                <p className={`font-semibold text-sm leading-tight ${rem.isCompleted ? "line-through text-sidebar-foreground/75" : "text-foreground"}`}>
                                   {rem.title}
                                 </p>
                                 {rem.description && (
-                                  <p className={`text-xs mt-1 leading-snug ${rem.isCompleted ? "text-slate-400" : "text-muted-foreground"}`}>{rem.description}</p>
+                                  <p className={`text-xs mt-1 leading-snug ${rem.isCompleted ? "text-sidebar-foreground/55" : "text-muted-foreground"}`}>{rem.description}</p>
                                 )}
                               </div>
 
@@ -434,7 +434,7 @@ export default function Reminders() {
                                     handleDelete(rem.id);
                                   }}
                                   aria-label="Hapus agenda"
-                                  className={`p-1 rounded transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
+                                  className={`p-1 rounded transition-opacity ${rem.isCompleted ? "opacity-100 text-sidebar-foreground/55 hover:text-destructive" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -446,7 +446,7 @@ export default function Reminders() {
                                   }}
                                   aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
                                   className={`p-1 rounded-full transition-colors cursor-pointer ${
-                                    rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"
+                                    rem.isCompleted ? "text-ok" : "text-muted-foreground/40 hover:text-primary"
                                   }`}
                                 >
                                   {rem.isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
@@ -498,17 +498,17 @@ export default function Reminders() {
                         <div
                           key={rem.id}
                           onClick={() => openDialog(undefined, undefined, rem)}
-                          className={`group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${
-                            rem.isCompleted ? "bg-slate-900 text-white border-slate-800 opacity-95 shadow-sm" : "bg-card border-border hover:border-primary/40 hover:shadow-sm"
+                          className={`group flex items-center gap-3 px-4 py-3 rounded-lg border transition-all cursor-pointer ${
+                            rem.isCompleted ? "bg-sidebar text-white border-sidebar-border opacity-95 shadow-sm" : "bg-card border-border hover:border-primary/40 hover:shadow-sm"
                           }`}
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                            rem.isCompleted ? "bg-slate-800 text-slate-300" : `${iconConfig.color}`
+                            rem.isCompleted ? "bg-sidebar-accent text-sidebar-foreground/75" : `${iconConfig.color}`
                           }`}>
                             <CategoryIcon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold leading-tight ${rem.isCompleted ? "line-through text-slate-300" : ""}`}>
+                            <p className={`text-sm font-semibold leading-tight ${rem.isCompleted ? "line-through text-sidebar-foreground/75" : ""}`}>
                               {rem.title}
                             </p>
                           </div>
@@ -520,7 +520,7 @@ export default function Reminders() {
                                 handleDelete(rem.id);
                               }}
                               aria-label="Hapus task"
-                              className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
+                              className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-sidebar-foreground/55 hover:text-destructive" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -531,7 +531,7 @@ export default function Reminders() {
                                 handleComplete(rem.id);
                               }}
                               aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
-                              className={`p-1 transition-colors cursor-pointer ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
+                              className={`p-1 transition-colors cursor-pointer ${rem.isCompleted ? "text-ok" : "text-muted-foreground/40 hover:text-primary"}`}
                             >
                               {rem.isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                             </button>
@@ -554,7 +554,7 @@ export default function Reminders() {
             <Inbox className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold text-sm text-foreground">Weekly Inbox</span>
             {allWeekUnscheduled.length > 0 && (
-              <span className="text-xs bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
                 {allWeekUnscheduled.length}
               </span>
             )}
@@ -579,19 +579,19 @@ export default function Reminders() {
                   key={rem.id}
                   onClick={() => openDialog(undefined, undefined, rem)}
                   className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all cursor-pointer ${
-                    rem.isCompleted ? "bg-slate-900 text-white border-slate-800 opacity-90 shadow-sm" : "bg-background border-border hover:border-primary/40 hover:shadow-sm"
+                    rem.isCompleted ? "bg-sidebar text-white border-sidebar-border opacity-90 shadow-sm" : "bg-background border-border hover:border-primary/40 hover:shadow-sm"
                   }`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                    rem.isCompleted ? "bg-slate-800 text-slate-300" : `${iconConfig.color}`
+                    rem.isCompleted ? "bg-sidebar-accent text-sidebar-foreground/75" : `${iconConfig.color}`
                   }`}>
                     <CategoryIcon className="w-3.5 h-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-semibold leading-tight truncate ${rem.isCompleted ? "line-through text-slate-300" : ""}`}>
+                    <p className={`text-xs font-semibold leading-tight truncate ${rem.isCompleted ? "line-through text-sidebar-foreground/75" : ""}`}>
                       {rem.title}
                     </p>
-                    <p className={`text-[10px] mt-0.5 ${rem.isCompleted ? "text-slate-400" : "text-muted-foreground/70"}`}>
+                    <p className={`text-2xs mt-0.5 ${rem.isCompleted ? "text-sidebar-foreground/55" : "text-muted-foreground/70"}`}>
                       {format(parseISO(rem.date), "EEE, d MMM")}
                     </p>
                   </div>
@@ -603,7 +603,7 @@ export default function Reminders() {
                         handleDelete(rem.id);
                       }}
                       aria-label="Hapus task"
-                      className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-slate-400 hover:text-red-400" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
+                      className={`p-1 transition-opacity ${rem.isCompleted ? "opacity-100 text-sidebar-foreground/55 hover:text-destructive" : "opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -614,7 +614,7 @@ export default function Reminders() {
                         handleComplete(rem.id);
                       }}
                       aria-label={rem.isCompleted ? "Tandai belum selesai" : "Tandai selesai"}
-                      className={`p-1 cursor-pointer transition-colors ${rem.isCompleted ? "text-emerald-400" : "text-muted-foreground/40 hover:text-primary"}`}
+                      className={`p-1 cursor-pointer transition-colors ${rem.isCompleted ? "text-ok" : "text-muted-foreground/40 hover:text-primary"}`}
                     >
                       {rem.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                     </button>
@@ -629,7 +629,7 @@ export default function Reminders() {
       {/* Floating add button (mobile) */}
       <button
         onClick={() => openDialog(selectedDateStr)}
-        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 z-50 ring-4 ring-background"
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-sm flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 z-50 ring-4 ring-background"
       >
         <Plus className="w-7 h-7" />
       </button>
@@ -639,7 +639,7 @@ export default function Reminders() {
         <DialogContent className="sm:max-w-md">
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
                 {editingId ? "Edit Agenda" : "Tambah Agenda Structured"}
               </DialogTitle>
@@ -659,7 +659,7 @@ export default function Reminders() {
                         type="button"
                         onClick={() => setFormData({ ...formData, iconId: c.id })}
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium shrink-0 transition-all ${
-                          isSelected ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm" : "bg-card border-border hover:bg-muted text-muted-foreground"
+                          isSelected ? "bg-primary text-primary-foreground border-primary font-semibold shadow-sm" : "bg-card border-border hover:bg-muted text-muted-foreground"
                         }`}
                       >
                         <IconComponent className="w-3.5 h-3.5" />
@@ -690,8 +690,8 @@ export default function Reminders() {
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 />
                 {showSuggestions && suggestions && suggestions.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-xl overflow-hidden divide-y divide-border/40">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1.5 bg-muted/50">
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-sm overflow-hidden divide-y divide-border/40">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1.5 bg-muted/50">
                       Rekomendasi dari riwayat
                     </p>
                     {suggestions.slice(0, 5).map(s => (

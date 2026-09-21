@@ -17,11 +17,12 @@ import { cn } from "@/lib/utils";
 
 const CATEGORIES: BerkasCategory[] = ["Akademik", "Bahasa", "Sertifikat", "Lainnya"];
 
+// Nominal — the label already says which it is.
 const categoryColors: Record<BerkasCategory, string> = {
-  Akademik: "bg-sky-100 text-sky-700 border-sky-200",
-  Bahasa: "bg-amber-100 text-amber-700 border-amber-200",
-  Sertifikat: "bg-green-100 text-green-700 border-green-200",
-  Lainnya: "bg-slate-100 text-slate-600 border-slate-200",
+  Akademik: "chip chip-tag",
+  Bahasa: "chip chip-tag",
+  Sertifikat: "chip chip-tag",
+  Lainnya: "chip chip-tag",
 };
 
 const categoryExamples: Record<BerkasCategory, string> = {
@@ -73,7 +74,7 @@ function PreviewDialog({ doc, onClose }: PreviewDialogProps) {
             {doc.originalName} &bull; {formatBytes(doc.fileSize)} &bull; {formatDate(doc.dateAdded)}
           </p>
         </DialogHeader>
-        <div className="flex-1 overflow-auto rounded-md border border-border bg-muted/30 min-h-[300px] flex items-center justify-center">
+        <div className="flex-1 overflow-auto rounded-sm border border-border bg-muted/30 min-h-[300px] flex items-center justify-center">
           {isImage && (
             <img src={doc.dataUrl} alt={doc.name} className="max-w-full max-h-[60vh] object-contain rounded" />
           )}
@@ -225,7 +226,7 @@ function UploadDialog({ open, onClose, onSave }: UploadDialogProps) {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-sm">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               {error}
             </div>
@@ -310,7 +311,7 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
   const canPreview = isImage || isPdf;
 
   return (
-    <Card data-testid={`berkas-card-${doc.id}`} className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card data-testid={`berkas-card-${doc.id}`} className="overflow-hidden hover:shadow-sm transition-shadow">
       {/* Thumbnail / Icon area */}
       <div
         className={cn(
@@ -322,7 +323,7 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
         {isImage ? (
           <img src={doc.dataUrl} alt={doc.name} className="w-full h-full object-cover" />
         ) : (
-          <Icon className={cn("w-12 h-12 text-muted-foreground/60", isPdf && "text-rose-400")} />
+          <Icon className={cn("w-12 h-12 text-muted-foreground/60", isPdf && "text-urgent")} />
         )}
         {canPreview && (
           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -333,9 +334,9 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
 
       <CardContent className="p-3">
         <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-2 mb-1.5">{doc.name}</h3>
-        <Badge variant="outline" className={cn("text-xs mb-2", categoryColors[doc.category])}>
+        <span className={cn(categoryColors[doc.category], "mb-2")}>
           {doc.category}
-        </Badge>
+        </span>
         {doc.description && (
           <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{doc.description}</p>
         )}
@@ -350,7 +351,7 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
                 onClick={onPreview}
                 data-testid={`btn-preview-${doc.id}`}
                 title="Lihat"
-                className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                className="p-1.5 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
               >
                 <Eye className="w-3.5 h-3.5" />
               </button>
@@ -359,7 +360,7 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
               onClick={() => downloadFile(doc.dataUrl, doc.originalName)}
               data-testid={`btn-download-${doc.id}`}
               title="Unduh"
-              className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              className="p-1.5 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
             >
               <Download className="w-3.5 h-3.5" />
             </button>
@@ -367,7 +368,7 @@ function BerkasCard({ doc, onDelete, onPreview }: { doc: StoredBerkas; onDelete:
               onClick={onDelete}
               data-testid={`btn-delete-${doc.id}`}
               title="Hapus"
-              className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+              className="p-1.5 rounded-sm hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -436,7 +437,7 @@ export default function Documents() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Berkas Penting</h1>
+          <h1 className="text-2xl text-foreground mb-1">Berkas Penting</h1>
           <p className="text-muted-foreground text-sm">Simpan transkip, sertifikat, dan dokumen penting lainnya.</p>
         </div>
         <Button onClick={() => setUploadOpen(true)} data-testid="btn-upload-berkas" className="self-start sm:self-auto">
@@ -455,7 +456,7 @@ export default function Documents() {
             </div>
             <div className="w-full bg-muted rounded-full h-1.5">
               <div
-                className={cn("h-1.5 rounded-full transition-all", storagePct > 80 ? "bg-amber-500" : "bg-primary")}
+                className={cn("h-1.5 rounded-full transition-all", storagePct > 80 ? "bg-soon" : "bg-primary")}
                 style={{ width: `${storagePct}%` }}
               />
             </div>
@@ -513,9 +514,9 @@ export default function Documents() {
           <div key={cat} className="mb-8">
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-base font-semibold text-foreground">{cat}</h2>
-              <Badge variant="outline" className={cn("text-xs", categoryColors[cat as BerkasCategory])}>
+              <span className={cn(categoryColors[cat as BerkasCategory], "font-mono")}>
                 {list.length}
-              </Badge>
+              </span>
               <p className="text-xs text-muted-foreground">{categoryExamples[cat as BerkasCategory]}</p>
             </div>
             <div className="grid grid-cols-4 gap-4">

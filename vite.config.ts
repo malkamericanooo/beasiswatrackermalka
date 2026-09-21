@@ -104,6 +104,12 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    watch: {
+      // apiMockPlugin writes local_db.json on every save, and it sits inside
+      // the Vite root — so the watcher force-reloaded the page, the app
+      // re-synced on load, wrote again, and the dev server reloaded forever.
+      ignored: ["**/local_db.json"],
+    },
   },
   preview: {
     port,
